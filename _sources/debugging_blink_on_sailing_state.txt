@@ -1,0 +1,8 @@
+debugging_blink_on_sailing_state
+================================
+
+Blink LEDs to indicate sailing state 
+
+Publishes: messages that encode a colour in an Int32 
+
+Subscribes: sailing state

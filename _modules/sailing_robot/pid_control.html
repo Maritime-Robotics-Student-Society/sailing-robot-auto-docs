@@ -1,0 +1,331 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sailing_robot.pid_control &mdash; Soton Pirate RoBoat 0.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Soton Pirate RoBoat 0.0.0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Soton Pirate RoBoat 0.0.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sailing_robot.pid_control</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot; A simple PID controller class.</span>
+
+<span class="sd">This is a mostly literal C++ -&gt; Python translation of the ROS</span>
+<span class="sd">control_toolbox Pid class: http://ros.org/wiki/control_toolbox.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">math</span>
+
+<span class="c">#*******************************************************************</span>
+<span class="c"># Translated from pid.cpp by Nathan Sprague</span>
+<span class="c"># Jan. 2013</span>
+<span class="c"># See below for original license information:</span>
+<span class="c">#*******************************************************************</span>
+
+<span class="c">#*******************************************************************</span>
+<span class="c"># Software License Agreement (BSD License)</span>
+<span class="c">#</span>
+<span class="c">#  Copyright (c) 2008, Willow Garage, Inc.</span>
+<span class="c">#  All rights reserved.</span>
+<span class="c">#</span>
+<span class="c">#  Redistribution and use in source and binary forms, with or without</span>
+<span class="c">#  modification, are permitted provided that the following conditions</span>
+<span class="c">#  are met:</span>
+<span class="c">#</span>
+<span class="c">#   * Redistributions of source code must retain the above copyright</span>
+<span class="c">#     notice, this list of conditions and the following disclaimer.</span>
+<span class="c">#   * Redistributions in binary form must reproduce the above</span>
+<span class="c">#     copyright notice, this list of conditions and the following</span>
+<span class="c">#     disclaimer in the documentation and/or other materials provided</span>
+<span class="c">#     with the distribution.</span>
+<span class="c">#   * Neither the name of the Willow Garage nor the names of its</span>
+<span class="c">#     contributors may be used to endorse or promote products derived</span>
+<span class="c">#     from this software without specific prior written permission.</span>
+<span class="c">#</span>
+<span class="c">#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS</span>
+<span class="c">#  &quot;AS IS&quot; AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT</span>
+<span class="c">#  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS</span>
+<span class="c">#  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE</span>
+<span class="c">#  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,</span>
+<span class="c">#  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,</span>
+<span class="c">#  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;</span>
+<span class="c">#  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER</span>
+<span class="c">#  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT</span>
+<span class="c">#  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN</span>
+<span class="c">#  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE</span>
+<span class="c">#  POSSIBILITY OF SUCH DAMAGE.</span>
+<span class="c">#*******************************************************************</span>
+
+
+
+<div class="viewcode-block" id="PID"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.pid_control.PID">[docs]</a><span class="k">class</span> <span class="nc">PID</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; A basic pid class.</span>
+
+<span class="sd">    This class implements a generic structure that can be used to</span>
+<span class="sd">    create a wide range of pid controllers. It can function</span>
+<span class="sd">    independently or be subclassed to provide more specific controls</span>
+<span class="sd">    based on a particular control loop.</span>
+
+<span class="sd">    In particular, this class implements the standard pid equation:</span>
+
+<span class="sd">    $command = -p_{term} - i_{term} - d_{term} $</span>
+
+<span class="sd">    where:</span>
+
+<span class="sd">    $ p_{term} = p_{gain} * p_{error} $</span>
+<span class="sd">    $ i_{term} = i_{gain} * i_{error} $</span>
+<span class="sd">    $ d_{term} = d_{gain} * d_{error} $</span>
+<span class="sd">    $ i_{error} = i_{error} + p_{error} * dt $</span>
+<span class="sd">    $ d_{error} = (p_{error} - p_{error last}) / dt $</span>
+
+<span class="sd">    given:</span>
+
+<span class="sd">    $ p_{error} = p_{state} - p_{target} $.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p_gain</span><span class="p">,</span> <span class="n">i_gain</span><span class="p">,</span> <span class="n">d_gain</span><span class="p">,</span> <span class="n">i_max</span><span class="p">,</span> <span class="n">i_min</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Constructor, zeros out Pid values when created and</span>
+<span class="sd">        initialize Pid-gains and integral term limits.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">          p_gain     The proportional gain.</span>
+<span class="sd">          i_gain     The integral gain.</span>
+<span class="sd">          d_gain     The derivative gain.</span>
+<span class="sd">          i_max      The integral upper limit.</span>
+<span class="sd">          i_min      The integral lower limit.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_gains</span><span class="p">(</span><span class="n">p_gain</span><span class="p">,</span> <span class="n">i_gain</span><span class="p">,</span> <span class="n">d_gain</span><span class="p">,</span> <span class="n">i_max</span><span class="p">,</span> <span class="n">i_min</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+
+<div class="viewcode-block" id="PID.reset"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.pid_control.PID.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;  Reset the state of this PID controller &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_p_error_last</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="c"># Save position state for derivative</span>
+                                 <span class="c"># state calculation.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_p_error</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="c"># Position error.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_d_error</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="c"># Derivative error.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_i_error</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="c"># Integator error.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cmd</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="c"># Command to send.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_last_time</span> <span class="o">=</span> <span class="bp">None</span> <span class="c"># Used for automatic calculation of dt.</span>
+</div>
+<div class="viewcode-block" id="PID.set_gains"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.pid_control.PID.set_gains">[docs]</a>    <span class="k">def</span> <span class="nf">set_gains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p_gain</span><span class="p">,</span> <span class="n">i_gain</span><span class="p">,</span> <span class="n">d_gain</span><span class="p">,</span> <span class="n">i_max</span><span class="p">,</span> <span class="n">i_min</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Set PID gains for the controller.</span>
+
+<span class="sd">         Parameters:</span>
+<span class="sd">          p_gain     The proportional gain.</span>
+<span class="sd">          i_gain     The integral gain.</span>
+<span class="sd">          d_gain     The derivative gain.</span>
+<span class="sd">          i_max      The integral upper limit.</span>
+<span class="sd">          i_min      The integral lower limit.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_p_gain</span> <span class="o">=</span> <span class="n">p_gain</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_i_gain</span> <span class="o">=</span> <span class="n">i_gain</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_d_gain</span> <span class="o">=</span> <span class="n">d_gain</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_i_max</span> <span class="o">=</span> <span class="n">i_max</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_i_min</span> <span class="o">=</span> <span class="n">i_min</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="PID.p_gain"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.pid_control.PID.p_gain">[docs]</a>    <span class="k">def</span> <span class="nf">p_gain</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Read-only access to p_gain. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_p_gain</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="PID.i_gain"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.pid_control.PID.i_gain">[docs]</a>    <span class="k">def</span> <span class="nf">i_gain</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Read-only access to i_gain. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_i_gain</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="PID.d_gain"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.pid_control.PID.d_gain">[docs]</a>    <span class="k">def</span> <span class="nf">d_gain</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Read-only access to d_gain. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_d_gain</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="PID.i_max"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.pid_control.PID.i_max">[docs]</a>    <span class="k">def</span> <span class="nf">i_max</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Read-only access to i_max. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_i_max</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="PID.i_min"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.pid_control.PID.i_min">[docs]</a>    <span class="k">def</span> <span class="nf">i_min</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Read-only access to i_min. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_i_min</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="PID.p_error"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.pid_control.PID.p_error">[docs]</a>    <span class="k">def</span> <span class="nf">p_error</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Read-only access to p_error. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_p_error</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="PID.i_error"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.pid_control.PID.i_error">[docs]</a>    <span class="k">def</span> <span class="nf">i_error</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Read-only access to i_error. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_i_error</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="PID.d_error"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.pid_control.PID.d_error">[docs]</a>    <span class="k">def</span> <span class="nf">d_error</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Read-only access to d_error. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_d_error</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="PID.cmd"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.pid_control.PID.cmd">[docs]</a>    <span class="k">def</span> <span class="nf">cmd</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Read-only access to the latest command. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cmd</span>
+
+</div>
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; String representation of the current state of the controller. &quot;&quot;&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+        <span class="n">result</span> <span class="o">+=</span> <span class="s">&quot;p_gain:  &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p_gain</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span>
+        <span class="n">result</span> <span class="o">+=</span> <span class="s">&quot;i_gain:  &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">i_gain</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span>
+        <span class="n">result</span> <span class="o">+=</span> <span class="s">&quot;d_gain:  &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">d_gain</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span>
+        <span class="n">result</span> <span class="o">+=</span> <span class="s">&quot;i_max:   &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">i_max</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span>
+        <span class="n">result</span> <span class="o">+=</span> <span class="s">&quot;i_min:   &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">i_min</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span>
+        <span class="n">result</span> <span class="o">+=</span> <span class="s">&quot;p_error: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p_error</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span>
+        <span class="n">result</span> <span class="o">+=</span> <span class="s">&quot;i_error: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">i_error</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span>
+        <span class="n">result</span> <span class="o">+=</span> <span class="s">&quot;d_error: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">d_error</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span>
+        <span class="n">result</span> <span class="o">+=</span> <span class="s">&quot;cmd:     &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cmd</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+<div class="viewcode-block" id="PID.update_PID"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.pid_control.PID.update_PID">[docs]</a>    <span class="k">def</span> <span class="nf">update_PID</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p_error</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;  Update the Pid loop with nonuniform time step size.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">          p_error  Error since last call (p_state - p_target)</span>
+<span class="sd">          dt       Change in time since last call, in seconds, or None.</span>
+<span class="sd">                   If dt is None, then the system clock will be used to</span>
+<span class="sd">                   calculate the time since the last update.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">dt</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">cur_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_last_time</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_last_time</span> <span class="o">=</span> <span class="n">cur_time</span>
+            <span class="n">dt</span> <span class="o">=</span> <span class="n">cur_time</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_last_time</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_last_time</span> <span class="o">=</span> <span class="n">cur_time</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_p_error</span> <span class="o">=</span> <span class="n">p_error</span> <span class="c"># this is pError = pState-pTarget</span>
+        <span class="k">if</span> <span class="n">dt</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">math</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">dt</span><span class="p">)</span> <span class="ow">or</span> <span class="n">math</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">dt</span><span class="p">):</span>
+            <span class="k">return</span> <span class="mf">0.0</span>
+
+        <span class="c"># Calculate proportional contribution to command</span>
+        <span class="n">p_term</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_p_gain</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_p_error</span>
+
+        <span class="c"># Calculate the integral error</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_i_error</span> <span class="o">+=</span> <span class="n">dt</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_p_error</span>
+
+        <span class="c"># Calculate integral contribution to command</span>
+        <span class="n">i_term</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_i_gain</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_i_error</span>
+
+        <span class="c"># Limit i_term so that the limit is meaningful in the output</span>
+        <span class="k">if</span> <span class="n">i_term</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_i_max</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_i_gain</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">i_term</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_i_max</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_i_error</span> <span class="o">=</span> <span class="n">i_term</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_i_gain</span>
+        <span class="k">elif</span> <span class="n">i_term</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_i_min</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_i_gain</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">i_term</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_i_min</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_i_error</span> <span class="o">=</span> <span class="n">i_term</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_i_gain</span>
+
+        <span class="c"># Calculate the derivative error</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_d_error</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_p_error</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_p_error_last</span><span class="p">)</span> <span class="o">/</span> <span class="n">dt</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_p_error_last</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_p_error</span>
+
+        <span class="c"># Calculate derivative contribution to command</span>
+        <span class="n">d_term</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_d_gain</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_d_error</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cmd</span> <span class="o">=</span> <span class="o">-</span><span class="n">p_term</span> <span class="o">-</span> <span class="n">i_term</span> <span class="o">-</span> <span class="n">d_term</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cmd</span>
+</div></div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">controller</span> <span class="o">=</span> <span class="n">PID</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">)</span>
+    <span class="k">print</span> <span class="n">controller</span>
+    <span class="n">controller</span><span class="o">.</span><span class="n">update_PID</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">print</span> <span class="n">controller</span>
+    <span class="n">controller</span><span class="o">.</span><span class="n">update_PID</span><span class="p">(</span><span class="o">-.</span><span class="mi">5</span><span class="p">)</span>
+    <span class="k">print</span> <span class="n">controller</span>
+
+<div class="viewcode-block" id="saturation"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.pid_control.saturation">[docs]</a><span class="k">def</span> <span class="nf">saturation</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span><span class="n">lowerlimits</span><span class="p">,</span><span class="n">higherlimits</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">cmd</span><span class="o">&gt;</span><span class="n">higherlimits</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">higherlimits</span>
+    <span class="k">elif</span> <span class="n">cmd</span><span class="o">&lt;</span><span class="n">lowerlimits</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">lowerlimits</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">cmd</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Soton Pirate RoBoat 0.0.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2016, Soton Pirates.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

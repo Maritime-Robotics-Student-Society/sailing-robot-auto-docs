@@ -1,0 +1,323 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sailing_robot.tasks &mdash; Soton Pirate RoBoat 0.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Soton Pirate RoBoat 0.0.0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Soton Pirate RoBoat 0.0.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sailing_robot.tasks</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Machinery to step through tasks.</span>
+
+<span class="sd">This can be tested without ROS; tasks_ros.py contains a subclass which</span>
+<span class="sd">integrates with ROS to publish logging and debugging topics.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
+
+<span class="kn">from</span> <span class="nn">LatLon</span> <span class="kn">import</span> <span class="n">LatLon</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">types</span>
+
+<span class="kn">from</span> <span class="nn">.navigation</span> <span class="kn">import</span> <span class="n">Navigation</span>
+<span class="kn">from</span> <span class="nn">.heading_planning_laylines</span> <span class="kn">import</span> <span class="n">HeadingPlan</span>
+<span class="kn">from</span> <span class="nn">.station_keeping2</span> <span class="kn">import</span> <span class="n">StationKeeping</span>
+<span class="kn">from</span> <span class="nn">.return_to_safety</span> <span class="kn">import</span> <span class="n">ReturnToSafetyZone</span>
+<span class="kn">from</span> <span class="nn">.obstacle_waypoints</span> <span class="kn">import</span> <span class="n">ObstacleWaypoints</span>
+<span class="kn">from</span> <span class="nn">.timeout</span> <span class="kn">import</span> <span class="n">StartTimer</span>
+
+<div class="viewcode-block" id="tasks_from_wps"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.tasks.tasks_from_wps">[docs]</a><span class="k">def</span> <span class="nf">tasks_from_wps</span><span class="p">(</span><span class="n">wp_params</span><span class="p">):</span>
+    <span class="n">target_radius</span> <span class="o">=</span> <span class="n">wp_params</span><span class="p">[</span><span class="s">&#39;acceptRadius&#39;</span><span class="p">]</span>
+    <span class="n">tack_voting_radius</span> <span class="o">=</span> <span class="n">wp_params</span><span class="p">[</span><span class="s">&#39;tackVotingRadius&#39;</span><span class="p">]</span>
+    <span class="n">coordinates</span> <span class="o">=</span> <span class="n">wp_params</span><span class="p">[</span><span class="s">&#39;table&#39;</span><span class="p">]</span>
+    
+    <span class="k">def</span> <span class="nf">expand_to_waypoint</span><span class="p">(</span><span class="n">wpid</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s">&#39;kind&#39;</span><span class="p">:</span> <span class="s">&#39;to_waypoint&#39;</span><span class="p">,</span>
+            <span class="s">&#39;waypoint_ll&#39;</span><span class="p">:</span> <span class="n">coordinates</span><span class="p">[</span><span class="n">wpid</span><span class="p">],</span>
+            <span class="s">&#39;target_radius&#39;</span><span class="p">:</span> <span class="n">target_radius</span><span class="p">,</span>
+            <span class="s">&#39;tack_voting_radius&#39;</span><span class="p">:</span> <span class="n">tack_voting_radius</span><span class="p">,</span>
+            <span class="s">&#39;waypoint_id&#39;</span><span class="p">:</span> <span class="n">wpid</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="s">&#39;tasks&#39;</span> <span class="ow">in</span> <span class="n">wp_params</span><span class="p">:</span>
+        <span class="c"># Long specification: list of tasks</span>
+        <span class="k">for</span> <span class="n">wp_task</span> <span class="ow">in</span> <span class="n">wp_params</span><span class="p">[</span><span class="s">&#39;tasks&#39;</span><span class="p">]:</span>
+            <span class="n">kind</span> <span class="o">=</span> <span class="n">wp_task</span><span class="p">[</span><span class="s">&#39;kind&#39;</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s">&#39;to_waypoint&#39;</span><span class="p">:</span>
+                <span class="n">lat</span><span class="p">,</span> <span class="n">lon</span> <span class="o">=</span> <span class="n">coordinates</span><span class="p">[</span><span class="n">wp_task</span><span class="p">[</span><span class="s">&#39;waypoint&#39;</span><span class="p">]]</span>
+                <span class="n">expanded_task</span> <span class="o">=</span> <span class="n">expand_to_waypoint</span><span class="p">(</span><span class="n">wp_task</span><span class="p">[</span><span class="s">&#39;waypoint&#39;</span><span class="p">])</span>
+                <span class="k">if</span> <span class="s">&#39;accept_radius&#39;</span> <span class="ow">in</span> <span class="n">wp_task</span><span class="p">:</span>
+                    <span class="n">expanded_task</span><span class="p">[</span><span class="s">&#39;target_radius&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">wp_task</span><span class="p">[</span><span class="s">&#39;accept_radius&#39;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="s">&#39;tack_voting_radius&#39;</span> <span class="ow">in</span> <span class="n">wp_task</span><span class="p">:</span>
+                    <span class="n">expanded_task</span><span class="p">[</span><span class="s">&#39;tack_voting_radius&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">wp_task</span><span class="p">[</span><span class="s">&#39;accept_radius&#39;</span><span class="p">]</span>
+
+            <span class="k">elif</span> <span class="n">kind</span> <span class="o">==</span> <span class="s">&#39;keep_station&#39;</span><span class="p">:</span>
+                <span class="n">lat</span><span class="p">,</span> <span class="n">lon</span> <span class="o">=</span> <span class="n">coordinates</span><span class="p">[</span><span class="n">wp_task</span><span class="p">[</span><span class="s">&#39;waypoint&#39;</span><span class="p">]]</span>
+                <span class="n">expanded_task</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s">&#39;kind&#39;</span><span class="p">:</span> <span class="s">&#39;keep_station&#39;</span><span class="p">,</span>
+                    <span class="s">&#39;marker_ll&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">lat</span><span class="p">,</span> <span class="n">lon</span><span class="p">),</span>
+                    <span class="s">&#39;linger&#39;</span><span class="p">:</span> <span class="n">wp_task</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;linger&#39;</span><span class="p">,</span> <span class="mi">300</span><span class="p">),</span>
+                    <span class="s">&#39;radius&#39;</span><span class="p">:</span> <span class="n">wp_task</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;radius&#39;</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
+                    <span class="s">&#39;wind_angle&#39;</span><span class="p">:</span> <span class="n">wp_task</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;wind_angle&#39;</span><span class="p">,</span> <span class="mi">75</span><span class="p">),</span>
+                <span class="p">}</span>
+
+            <span class="k">elif</span> <span class="n">kind</span> <span class="o">==</span> <span class="s">&#39;obstacle_waypoints&#39;</span><span class="p">:</span>
+                <span class="n">expanded_task</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s">&#39;kind&#39;</span><span class="p">:</span> <span class="s">&#39;obstacle_waypoints&#39;</span><span class="p">,</span>
+                    <span class="s">&#39;normal_wp&#39;</span><span class="p">:</span> <span class="n">expand_to_waypoint</span><span class="p">(</span><span class="n">wp_task</span><span class="p">[</span><span class="s">&#39;normal&#39;</span><span class="p">]),</span>
+                    <span class="s">&#39;obstacle_wp&#39;</span><span class="p">:</span> <span class="n">expand_to_waypoint</span><span class="p">(</span><span class="n">wp_task</span><span class="p">[</span><span class="s">&#39;obstacle&#39;</span><span class="p">]),</span>
+                <span class="p">}</span>
+                <span class="k">if</span> <span class="s">&#39;accept_radius&#39;</span> <span class="ow">in</span> <span class="n">wp_task</span><span class="p">:</span>
+                    <span class="n">expanded_task</span><span class="p">[</span><span class="s">&#39;normal_wp&#39;</span><span class="p">][</span><span class="s">&#39;target_radius&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">wp_task</span><span class="p">[</span><span class="s">&#39;accept_radius&#39;</span><span class="p">]</span>
+                    <span class="n">expanded_task</span><span class="p">[</span><span class="s">&#39;obstacle_wp&#39;</span><span class="p">][</span><span class="s">&#39;target_radius&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">wp_task</span><span class="p">[</span><span class="s">&#39;accept_radius&#39;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="s">&#39;tack_voting_radius&#39;</span> <span class="ow">in</span> <span class="n">wp_task</span><span class="p">:</span>
+                    <span class="n">expanded_task</span><span class="p">[</span><span class="s">&#39;normal_wp&#39;</span><span class="p">][</span><span class="s">&#39;tack_voting_radius&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">wp_task</span><span class="p">[</span><span class="s">&#39;accept_radius&#39;</span><span class="p">]</span>
+                    <span class="n">expanded_task</span><span class="p">[</span><span class="s">&#39;obstacle_wp&#39;</span><span class="p">][</span><span class="s">&#39;tack_voting_radius&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">wp_task</span><span class="p">[</span><span class="s">&#39;accept_radius&#39;</span><span class="p">]</span>
+
+            <span class="k">elif</span> <span class="n">kind</span> <span class="o">==</span> <span class="s">&#39;start_timer&#39;</span><span class="p">:</span>
+                <span class="n">expanded_task</span> <span class="o">=</span> <span class="n">wp_task</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+            <span class="c"># Copy over any jump label</span>
+            <span class="n">expanded_task</span><span class="p">[</span><span class="s">&#39;jump_label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">wp_task</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;jump_label&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+            <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">expanded_task</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c"># Short specification: just a series of waypoints to go around</span>
+        <span class="k">for</span> <span class="n">wpid</span> <span class="ow">in</span> <span class="n">wp_params</span><span class="p">[</span><span class="s">&#39;list&#39;</span><span class="p">]:</span>
+            <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">expand_to_waypoint</span><span class="p">(</span><span class="n">wpid</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">res</span>
+</div>
+<div class="viewcode-block" id="TimedEnd"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.tasks.TimedEnd">[docs]</a><span class="k">class</span> <span class="nc">TimedEnd</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seconds</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seconds</span> <span class="o">=</span> <span class="n">seconds</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ends_at</span> <span class="o">=</span> <span class="bp">None</span>
+    
+<div class="viewcode-block" id="TimedEnd.start"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.tasks.TimedEnd.start">[docs]</a>    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ends_at</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">seconds</span>
+    </div>
+<div class="viewcode-block" id="TimedEnd.check"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.tasks.TimedEnd.check">[docs]</a>    <span class="k">def</span> <span class="nf">check</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">ends_at</span><span class="p">)</span>
+</div></div>
+<div class="viewcode-block" id="TasksRunner"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.tasks.TasksRunner">[docs]</a><span class="k">class</span> <span class="nc">TasksRunner</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tasks</span><span class="p">,</span> <span class="n">nav</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task_ix</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">active_task</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nav</span> <span class="o">=</span> <span class="n">nav</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_jump_next</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_make_task</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">tasks</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">check_jump_labels</span><span class="p">()</span>
+    
+<div class="viewcode-block" id="TasksRunner.check_jump_labels"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.tasks.TasksRunner.check_jump_labels">[docs]</a>    <span class="k">def</span> <span class="nf">check_jump_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">jump_labels</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">t</span><span class="o">.</span><span class="n">jump_label</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span> <span class="k">if</span> <span class="n">t</span><span class="o">.</span><span class="n">jump_label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">t</span><span class="o">.</span><span class="n">task_kind</span> <span class="o">==</span> <span class="s">&#39;start_timer&#39;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">t</span><span class="o">.</span><span class="n">jump_to</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">jump_labels</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Timer tries to jump to </span><span class="si">%r</span><span class="s">, label not found&#39;</span>
+                                        <span class="o">%</span> <span class="n">t</span><span class="o">.</span><span class="n">jump_to</span><span class="p">)</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="TasksRunner.log"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.tasks.TasksRunner.log">[docs]</a>    <span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="o">*</span><span class="n">values</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">msg</span> <span class="o">%</span> <span class="n">values</span><span class="p">)</span>
+    </div>
+    <span class="k">def</span> <span class="nf">_make_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">taskdict</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Turn a task dict from params (or from tasks_from_wps) into a task object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">taskdict</span> <span class="o">=</span> <span class="n">taskdict</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">kind</span> <span class="o">=</span> <span class="n">taskdict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;kind&#39;</span><span class="p">)</span>
+        <span class="n">jump_label</span> <span class="o">=</span> <span class="n">taskdict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;jump_label&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s">&#39;to_waypoint&#39;</span><span class="p">:</span>
+            <span class="n">wp</span> <span class="o">=</span> <span class="n">LatLon</span><span class="p">(</span><span class="o">*</span><span class="n">taskdict</span><span class="p">[</span><span class="s">&#39;waypoint_ll&#39;</span><span class="p">])</span>
+            <span class="n">kw</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;target_radius&#39;</span><span class="p">:</span> <span class="n">taskdict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;target_radius&#39;</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">),</span>
+                  <span class="s">&#39;tack_voting_radius&#39;</span><span class="p">:</span> <span class="n">taskdict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;tack_voting_radius&#39;</span><span class="p">,</span> <span class="mf">15.</span><span class="p">),</span>
+                  <span class="s">&#39;waypoint_id&#39;</span><span class="p">:</span> <span class="n">taskdict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;waypoint_id&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">),</span>
+                 <span class="p">}</span>
+            <span class="n">task</span> <span class="o">=</span> <span class="n">HeadingPlan</span><span class="p">(</span><span class="n">waypoint</span><span class="o">=</span><span class="n">wp</span><span class="p">,</span> <span class="n">nav</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nav</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">kind</span> <span class="o">==</span> <span class="s">&#39;keep_station&#39;</span><span class="p">:</span>
+            <span class="n">task</span> <span class="o">=</span> <span class="n">StationKeeping</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nav</span><span class="p">,</span> <span class="o">**</span><span class="n">taskdict</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">kind</span> <span class="o">==</span> <span class="s">&#39;return_to_safety_zone&#39;</span><span class="p">:</span>
+            <span class="n">task</span> <span class="o">=</span> <span class="n">ReturnToSafetyZone</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nav</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">kind</span> <span class="o">==</span> <span class="s">&#39;obstacle_waypoints&#39;</span><span class="p">:</span>
+            <span class="n">normal_wp_plan</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_task</span><span class="p">(</span><span class="n">taskdict</span><span class="p">[</span><span class="s">&#39;normal_wp&#39;</span><span class="p">])</span>
+            <span class="n">obstacle_wp_plan</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_task</span><span class="p">(</span><span class="n">taskdict</span><span class="p">[</span><span class="s">&#39;obstacle_wp&#39;</span><span class="p">])</span>
+            <span class="n">task</span> <span class="o">=</span> <span class="n">ObstacleWaypoints</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nav</span><span class="p">,</span> <span class="n">normal_wp_plan</span><span class="p">,</span> <span class="n">obstacle_wp_plan</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">kind</span> <span class="o">==</span> <span class="s">&#39;start_timer&#39;</span><span class="p">:</span>
+            <span class="n">task</span> <span class="o">=</span> <span class="n">StartTimer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nav</span><span class="p">,</span> <span class="n">seconds</span><span class="o">=</span><span class="n">taskdict</span><span class="p">[</span><span class="s">&#39;seconds&#39;</span><span class="p">],</span>
+                      <span class="n">jump_to</span><span class="o">=</span><span class="n">taskdict</span><span class="p">[</span><span class="s">&#39;jump_to&#39;</span><span class="p">],</span> <span class="n">jump_callback</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">set_jump</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Unknown task type: {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">kind</span><span class="p">))</span>
+        
+        <span class="n">task</span><span class="o">.</span><span class="n">task_kind</span> <span class="o">=</span> <span class="n">kind</span>
+        <span class="n">task</span><span class="o">.</span><span class="n">jump_label</span> <span class="o">=</span> <span class="n">jump_label</span>
+        <span class="k">return</span> <span class="n">task</span>
+    
+    <span class="n">on_temporary_task</span> <span class="o">=</span> <span class="bp">False</span>
+
+<div class="viewcode-block" id="TasksRunner.start_next_task"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.tasks.TasksRunner.start_next_task">[docs]</a>    <span class="k">def</span> <span class="nf">start_next_task</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Step to the next task, making it the active task.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task_ix</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_ix</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s">&#39;warning&#39;</span><span class="p">,</span> <span class="s">&quot;Run all tasks, returning to start&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task_ix</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">active_task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">task_ix</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">on_temporary_task</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="n">endcond</span> <span class="o">=</span> <span class="s">&#39;&#39;</span> <span class="c"># TODO</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s">&#39;info&#39;</span><span class="p">,</span> <span class="s">&quot;Running task {}: {} with end condition {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">task_ix</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">active_task</span><span class="o">.</span><span class="n">task_kind</span><span class="p">,</span> <span class="s">&#39;/&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">endcond</span><span class="p">)</span>
+        <span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">active_task</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="TasksRunner.set_jump"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.tasks.TasksRunner.set_jump">[docs]</a>    <span class="k">def</span> <span class="nf">set_jump</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Jump callback to jump to task on next time step.&#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_jump_next</span> <span class="o">=</span> <span class="n">label</span>
+    </div>
+<div class="viewcode-block" id="TasksRunner.process_jump"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.tasks.TasksRunner.process_jump">[docs]</a>    <span class="k">def</span> <span class="nf">process_jump</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;If a jump is set, go to that task, and clear the jump.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns True if a jump occurred.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jump_next</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        
+        <span class="n">label</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jump_next</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_jump_next</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">task</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">task</span><span class="o">.</span><span class="n">jump_label</span> <span class="o">==</span> <span class="n">label</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">task_ix</span> <span class="o">=</span> <span class="n">i</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">on_temporary_task</span> <span class="o">=</span> <span class="bp">False</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">active_task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">task_ix</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">active_task</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s">&#39;warning&#39;</span><span class="p">,</span> <span class="s">&quot;Jumped to task {}: {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">task_ix</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">active_task</span><span class="o">.</span><span class="n">task_kind</span>
+                <span class="p">))</span>
+                <span class="k">return</span> <span class="bp">True</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s">&#39;error&#39;</span><span class="p">,</span> <span class="s">&quot;Couldn&#39;t find jump label </span><span class="si">%r</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">label</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">False</span>
+</div>
+<div class="viewcode-block" id="TasksRunner.insert_task"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.tasks.TasksRunner.insert_task">[docs]</a>    <span class="k">def</span> <span class="nf">insert_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">taskdict</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Do a temporary task.</span>
+
+<span class="sd">        After completing the temporary task, control will be return to the</span>
+<span class="sd">        regular task that was active before the temporary task was started.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># Decrease task_ix so we go back to the current task when this is done.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_temporary_task</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task_ix</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">on_temporary_task</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">active_task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_task</span><span class="p">(</span><span class="n">taskdict</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">active_task</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s">&#39;info&#39;</span><span class="p">,</span> <span class="s">&quot;Running intermediate task: {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">taskdict</span><span class="p">[</span><span class="s">&#39;kind&#39;</span><span class="p">]))</span>
+</div>
+<div class="viewcode-block" id="TasksRunner.calculate_state_and_goal"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.tasks.TasksRunner.calculate_state_and_goal">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_state_and_goal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Use the active task to calculate what to do now.</span>
+<span class="sd">        </span>
+<span class="sd">        Before using the active task, checks if it should go to the next task.</span>
+
+<span class="sd">        If a safety zone is specified, also checks if we&#39;re (nearly) out of it.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">process_jump</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">active_task</span><span class="o">.</span><span class="n">check_end_condition</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">start_next_task</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">check_safety_zone</span><span class="p">()</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">active_task</span><span class="o">.</span><span class="n">task_kind</span> <span class="o">!=</span> <span class="s">&#39;return_to_safety_zone&#39;</span><span class="p">:</span>
+            <span class="c"># We&#39;re about to wander out of the safety zone!</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s">&#39;warning&#39;</span><span class="p">,</span> <span class="s">&#39;At edge of safety zone&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">insert_task</span><span class="p">({</span><span class="s">&#39;kind&#39;</span><span class="p">:</span> <span class="s">&#39;return_to_safety_zone&#39;</span><span class="p">})</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">debug_pub</span><span class="p">(</span><span class="s">&#39;task_ix&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_ix</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">debug_pub</span><span class="p">(</span><span class="s">&#39;active_task_kind&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">active_task</span><span class="o">.</span><span class="n">task_kind</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">active_task</span><span class="o">.</span><span class="n">calculate_state_and_goal</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="TasksRunner.debug_pub"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.tasks.TasksRunner.debug_pub">[docs]</a>    <span class="k">def</span> <span class="nf">debug_pub</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">topic</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">pass</span>  <span class="c"># Overridden in subclass to send ROS message</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Soton Pirate RoBoat 0.0.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2016, Soton Pirates.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

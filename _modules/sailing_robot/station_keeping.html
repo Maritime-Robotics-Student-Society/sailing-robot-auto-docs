@@ -1,0 +1,185 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sailing_robot.station_keeping &mdash; Soton Pirate RoBoat 0.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Soton Pirate RoBoat 0.0.0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Soton Pirate RoBoat 0.0.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sailing_robot.station_keeping</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Code for staying inside a target region&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">LatLon</span> <span class="kn">as</span> <span class="nn">ll</span>
+<span class="kn">from</span> <span class="nn">shapely.geometry</span> <span class="kn">import</span> <span class="n">Polygon</span>
+
+<span class="kn">from</span> <span class="nn">.taskbase</span> <span class="kn">import</span> <span class="n">TaskBase</span>
+
+<div class="viewcode-block" id="StationKeeping"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.station_keeping.StationKeeping">[docs]</a><span class="k">class</span> <span class="nc">StationKeeping</span><span class="p">(</span><span class="n">TaskBase</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nav</span><span class="p">,</span> <span class="n">markers</span><span class="p">,</span> <span class="n">buffer_width</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Machinery to stay within a marked area.</span>
+
+<span class="sd">        nav is a Navigation object for common machinery.</span>
+
+<span class="sd">        markers is a list of (lat, lon) points marking the area we need to stay in.</span>
+<span class="sd">        </span>
+<span class="sd">        buffer_width is a distance in metres. The boat will try to stay this</span>
+<span class="sd">        far inside the boundaries of the target area. This is the margin for</span>
+<span class="sd">        turning, errors, wind changes, and so on.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nav</span> <span class="o">=</span> <span class="n">nav</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">markers</span> <span class="o">=</span> <span class="n">markers</span> <span class="ow">or</span> <span class="p">[</span>
+            <span class="p">(</span><span class="mf">50.8</span><span class="p">,</span> <span class="mf">1.01</span><span class="p">),</span>
+            <span class="p">(</span><span class="mf">50.8</span><span class="p">,</span> <span class="mf">1.03</span><span class="p">),</span>
+            <span class="p">(</span><span class="mf">50.82</span><span class="p">,</span> <span class="mf">1.01</span><span class="p">),</span>
+            <span class="p">(</span><span class="mf">50.82</span><span class="p">,</span> <span class="mf">1.03</span><span class="p">),</span>
+        <span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_zone</span> <span class="o">=</span> <span class="n">Polygon</span><span class="p">([</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">latlon_to_utm</span><span class="p">(</span><span class="o">*</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">markers</span>
+        <span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inner_zone</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_zone</span><span class="o">.</span><span class="n">buffer</span><span class="p">(</span><span class="o">-</span><span class="n">buffer_width</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">goal_heading</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sailing_state</span> <span class="o">=</span> <span class="s">&#39;normal&#39;</span>  <span class="c"># sailing state can be &#39;normal&#39;,&#39;tack_to_port_tack&#39; or  &#39;tack_to_stbd_tack&#39;</span>
+    
+<div class="viewcode-block" id="StationKeeping.start"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.station_keeping.StationKeeping.start">[docs]</a>    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+</div>
+<div class="viewcode-block" id="StationKeeping.calculate_state_and_goal"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.station_keeping.StationKeeping.calculate_state_and_goal">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_state_and_goal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Work out what we want the boat to do</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">boat_wind_angle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">angle_to_wind</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sailing_state</span> <span class="o">!=</span> <span class="s">&#39;normal&#39;</span><span class="p">:</span>
+            <span class="c"># A tack is in progress</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sailing_state</span> <span class="o">==</span> <span class="s">&#39;tack_to_port_tack&#39;</span><span class="p">:</span>
+                <span class="n">beating_angle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">beating_angle</span>
+                <span class="n">continue_tack</span> <span class="o">=</span> <span class="n">boat_wind_angle</span> <span class="o">&lt;</span> <span class="n">beating_angle</span>
+            <span class="k">else</span><span class="p">:</span>  <span class="c"># &#39;tack_to_stbd_tack&#39;</span>
+                <span class="n">beating_angle</span> <span class="o">=</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">beating_angle</span>
+                <span class="n">continue_tack</span> <span class="o">=</span> <span class="n">boat_wind_angle</span> <span class="o">&gt;</span> <span class="n">beating_angle</span>
+            <span class="k">if</span> <span class="n">continue_tack</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">goal_heading</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">wind_angle_to_heading</span><span class="p">(</span><span class="n">beating_angle</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">sailing_state</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">goal_heading</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c"># Tack completed</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sailing_state</span> <span class="o">=</span> <span class="s">&#39;normal&#39;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">position_xy</span><span class="o">.</span><span class="n">within</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inner_zone</span><span class="p">):</span>
+            <span class="c"># We&#39;re safe: carry on with our current heading</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">sailing_state</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">goal_heading</span>
+        
+        <span class="n">centroid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_zone</span><span class="o">.</span><span class="n">centroid</span>
+        <span class="n">centroid_ll</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">utm_to_latlon</span><span class="p">(</span><span class="n">centroid</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">centroid</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+        <span class="n">heading_to_centroid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">position_ll</span><span class="o">.</span><span class="n">heading_initial</span><span class="p">(</span><span class="n">centroid_ll</span><span class="p">)</span>
+
+        <span class="n">centroid_wind_angle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">heading_to_wind_angle</span><span class="p">(</span><span class="n">heading_to_centroid</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">centroid_wind_angle</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">beating_angle</span><span class="p">:</span>
+            <span class="c"># We can sail directly towards the centroid</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">centroid_wind_angle</span> <span class="o">*</span> <span class="n">boat_wind_angle</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c"># These two have the same sign, so we&#39;re on the right tack.</span>
+                <span class="k">return</span> <span class="p">(</span><span class="s">&#39;normal&#39;</span><span class="p">,</span> <span class="n">centroid_wind_angle</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c"># We need to tack before going towards the centroid</span>
+                <span class="k">if</span> <span class="n">centroid_wind_angle</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">switch_to</span> <span class="o">=</span> <span class="s">&#39;tack_to_port_tack&#39;</span>
+                    <span class="n">beating_angle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">beating_angle</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">switch_to</span> <span class="o">=</span> <span class="s">&#39;tack_to_stbd_tack&#39;</span>
+                    <span class="n">beating_angle</span> <span class="o">=</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">beating_angle</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sailing_state</span> <span class="o">=</span> <span class="n">switch_to</span>
+                <span class="k">return</span> <span class="n">switch_to</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">wind_angle_to_heading</span><span class="p">(</span><span class="n">beating_angle</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">boat_wind_angle</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c"># On the port tack</span>
+            <span class="n">beating_angle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">beating_angle</span>
+            <span class="n">other_tack</span> <span class="o">=</span> <span class="s">&#39;tack_to_stbd_tack&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">beating_angle</span> <span class="o">=</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">beating_angle</span>
+            <span class="n">other_tack</span> <span class="o">=</span> <span class="s">&#39;tack_to_port_tack&#39;</span>
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">centroid_wind_angle</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">15</span><span class="p">:</span>
+            <span class="c"># Switch to the tack that will take us closest to the centroid</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">centroid_wind_angle</span> <span class="o">*</span> <span class="n">boat_wind_angle</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">other_tack</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">wind_angle_to_heading</span><span class="p">(</span><span class="o">-</span><span class="n">beating_angle</span><span class="p">)</span>
+        
+        <span class="c"># Sail as close to the wind as we can on our current tack</span>
+        <span class="k">return</span> <span class="s">&#39;normal&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_angle_to_heading</span><span class="p">(</span><span class="n">beating_angle</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Soton Pirate RoBoat 0.0.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2016, Soton Pirates.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

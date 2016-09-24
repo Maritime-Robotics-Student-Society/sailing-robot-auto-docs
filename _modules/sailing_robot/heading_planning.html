@@ -1,0 +1,258 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sailing_robot.heading_planning &mdash; Soton Pirate RoBoat 0.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Soton Pirate RoBoat 0.0.0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Soton Pirate RoBoat 0.0.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sailing_robot.heading_planning</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">deque</span>
+<span class="kn">import</span> <span class="nn">LatLon</span> <span class="kn">as</span> <span class="nn">ll</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">from</span> <span class="nn">shapely.geometry</span> <span class="kn">import</span> <span class="n">Point</span>
+
+<span class="kn">from</span> <span class="nn">.taskbase</span> <span class="kn">import</span> <span class="n">TaskBase</span>
+
+<div class="viewcode-block" id="TackVoting"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.heading_planning.TackVoting">[docs]</a><span class="k">class</span> <span class="nc">TackVoting</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Handles a rolling vote of which tack we want to be on.</span>
+<span class="sd">    </span>
+<span class="sd">    :param int nsamples: N samples for voting. Sample frequency is determined by ROS rate.</span>
+<span class="sd">    :param int threshold: Number of votes to change tack. Should be &gt; (nsamples/2)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsamples</span><span class="p">,</span> <span class="n">threshold</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span> <span class="o">=</span> <span class="n">nsamples</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">threshold</span> <span class="o">=</span> <span class="n">threshold</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">votes</span> <span class="o">=</span> <span class="n">deque</span><span class="p">(</span><span class="n">maxlen</span><span class="o">=</span><span class="n">nsamples</span><span class="p">)</span>
+        <span class="c"># Start off indecisive, with equal votes either way</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">votes</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">nsamples</span> <span class="o">//</span> <span class="mi">2</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">votes_sum</span> <span class="o">=</span> <span class="n">nsamples</span> <span class="o">//</span> <span class="mi">2</span>
+
+<div class="viewcode-block" id="TackVoting.vote"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.heading_planning.TackVoting.vote">[docs]</a>    <span class="k">def</span> <span class="nf">vote</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Push one vote.</span>
+<span class="sd">        </span>
+<span class="sd">        0 votes for starboard tack, 1 for port.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">votes</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">votes_sum</span> <span class="o">-=</span> <span class="bp">self</span><span class="o">.</span><span class="n">votes</span><span class="o">.</span><span class="n">popleft</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">votes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">votes_sum</span> <span class="o">+=</span> <span class="n">value</span>
+</div>
+<div class="viewcode-block" id="TackVoting.tack_now"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.heading_planning.TackVoting.tack_now">[docs]</a>    <span class="k">def</span> <span class="nf">tack_now</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current_tack</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the current result - True to tack now.</span>
+<span class="sd">        </span>
+<span class="sd">        :param int current_tack: 0 if on starboard tack now, 1 if on port tack</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">current_tack</span><span class="p">:</span>
+            <span class="c"># Port: tack to starboard?</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">votes_sum</span> <span class="o">&lt;</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">threshold</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># Starboard: tack to port?</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">votes_sum</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">threshold</span>
+</div>
+<div class="viewcode-block" id="TackVoting.reset"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.heading_planning.TackVoting.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current_tack</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set all votes one way.</span>
+<span class="sd">        </span>
+<span class="sd">        :param int current_tack: 0 on startboard tack, 1 on port tack.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">current_tack</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">votes</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">votes_sum</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsamples</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">votes</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">votes_sum</span> <span class="o">=</span> <span class="mi">0</span>
+</div></div>
+<div class="viewcode-block" id="HeadingPlan"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.heading_planning.HeadingPlan">[docs]</a><span class="k">class</span> <span class="nc">HeadingPlan</span><span class="p">(</span><span class="n">TaskBase</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nav</span><span class="p">,</span> <span class="n">tack_line_offset</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
+            <span class="n">waypoint</span><span class="o">=</span><span class="n">ll</span><span class="o">.</span><span class="n">LatLon</span><span class="p">(</span><span class="mf">50.742810</span><span class="p">,</span> <span class="mf">1.014469</span><span class="p">),</span> <span class="c"># somewhere in the solent</span>
+            <span class="n">target_radius</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="n">tack_decision_samples</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">tack_decision_threshold</span><span class="o">=</span><span class="mf">0.75</span><span class="p">,</span>
+            <span class="n">waypoint_id</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+            <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sail towards a waypoint.</span>
+
+<span class="sd">        *nav* is a sailing_robot.navigation.Navigation instance.</span>
+<span class="sd">        </span>
+<span class="sd">        *waypoint* is a LatLon object telling us where to go.</span>
+<span class="sd">        </span>
+<span class="sd">        *target_radius* is how close we need to get to the waypoint, in metres.</span>
+<span class="sd">        </span>
+<span class="sd">        *tack_decision_samples* and *tack_decision_threshold* control tack</span>
+<span class="sd">        voting.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nav</span> <span class="o">=</span> <span class="n">nav</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">waypoint</span> <span class="o">=</span> <span class="n">waypoint</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">waypoint_id</span> <span class="o">=</span> <span class="n">waypoint_id</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">latlon_to_utm</span><span class="p">(</span><span class="n">waypoint</span><span class="o">.</span><span class="n">lat</span><span class="o">.</span><span class="n">decimal_degree</span><span class="p">,</span> <span class="n">waypoint</span><span class="o">.</span><span class="n">lon</span><span class="o">.</span><span class="n">decimal_degree</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">waypoint_xy</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_area</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">waypoint_xy</span><span class="o">.</span><span class="n">buffer</span><span class="p">(</span><span class="n">target_radius</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tack_line_offset</span> <span class="o">=</span> <span class="n">tack_line_offset</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wp_heading</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">side_heading</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">alternate_heading</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sailing_state</span> <span class="o">=</span> <span class="s">&#39;normal&#39;</span>  <span class="c"># sailing state can be &#39;normal&#39;,&#39;tack_to_port_tack&#39; or  &#39;tack_to_stbd_tack&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tack_voting</span> <span class="o">=</span> <span class="n">TackVoting</span><span class="p">(</span><span class="n">tack_decision_samples</span><span class="p">,</span>
+                         <span class="nb">int</span><span class="p">(</span><span class="n">tack_decision_threshold</span> <span class="o">*</span> <span class="n">tack_decision_samples</span><span class="p">))</span>
+    
+<div class="viewcode-block" id="HeadingPlan.start"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.heading_planning.HeadingPlan.start">[docs]</a>    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+</div>
+<div class="viewcode-block" id="HeadingPlan.check_end_condition"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.heading_planning.HeadingPlan.check_end_condition">[docs]</a>    <span class="k">def</span> <span class="nf">check_end_condition</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Are we there yet?&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">position_xy</span><span class="o">.</span><span class="n">within</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target_area</span><span class="p">)</span>
+</div>
+    <span class="n">debug_topics</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="s">&#39;heading_to_waypoint&#39;</span><span class="p">,</span> <span class="s">&#39;Float32&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s">&#39;distance_to_waypoint&#39;</span><span class="p">,</span> <span class="s">&#39;Float32&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s">&#39;goal_wind_angle&#39;</span><span class="p">,</span> <span class="s">&#39;Float32&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s">&#39;latest_waypoint_id&#39;</span><span class="p">,</span> <span class="s">&#39;String&#39;</span><span class="p">),</span>
+    <span class="p">]</span>
+
+<div class="viewcode-block" id="HeadingPlan.distance_heading_to_waypoint"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.heading_planning.HeadingPlan.distance_heading_to_waypoint">[docs]</a>    <span class="k">def</span> <span class="nf">distance_heading_to_waypoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate where we are relative to the waypoint, for debugging.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">waypoint_xy</span><span class="o">.</span><span class="n">x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">position_xy</span><span class="o">.</span><span class="n">x</span>
+        <span class="n">dy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">waypoint_xy</span><span class="o">.</span><span class="n">y</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">position_xy</span><span class="o">.</span><span class="n">y</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="p">(</span><span class="n">dx</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">dy</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">**</span> <span class="mf">0.5</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">degrees</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">atan2</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">))</span> <span class="o">%</span> <span class="mi">360</span>
+        <span class="k">return</span> <span class="n">d</span><span class="p">,</span> <span class="n">h</span>
+</div>
+<div class="viewcode-block" id="HeadingPlan.calculate_state_and_goal"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.heading_planning.HeadingPlan.calculate_state_and_goal">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_state_and_goal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Work out what we want the boat to do</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dwp</span><span class="p">,</span> <span class="n">hwp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">distance_heading_to_waypoint</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">debug_pub</span><span class="p">(</span><span class="s">&#39;distance_to_waypoint&#39;</span><span class="p">,</span> <span class="n">dwp</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">debug_pub</span><span class="p">(</span><span class="s">&#39;heading_to_waypoint&#39;</span><span class="p">,</span> <span class="n">hwp</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">debug_pub</span><span class="p">(</span><span class="s">&#39;latest_waypoint_id&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">waypoint_id</span><span class="p">)</span>
+
+        <span class="n">boat_wind_angle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">angle_to_wind</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sailing_state</span> <span class="o">!=</span> <span class="s">&#39;normal&#39;</span><span class="p">:</span>
+            <span class="c"># A tack is in progress</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sailing_state</span> <span class="o">==</span> <span class="s">&#39;tack_to_port_tack&#39;</span><span class="p">:</span>
+                <span class="n">beating_angle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">beating_angle</span>
+                <span class="n">continue_tack</span> <span class="o">=</span> <span class="n">boat_wind_angle</span> <span class="o">&lt;</span> <span class="n">beating_angle</span>
+            <span class="k">else</span><span class="p">:</span>  <span class="c"># &#39;tack_to_stbd_tack&#39;</span>
+                <span class="n">beating_angle</span> <span class="o">=</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">beating_angle</span>
+                <span class="n">continue_tack</span> <span class="o">=</span> <span class="n">boat_wind_angle</span> <span class="o">&gt;</span> <span class="n">beating_angle</span>
+            <span class="k">if</span> <span class="n">continue_tack</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">sailing_state</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">wind_angle_to_heading</span><span class="p">(</span><span class="n">beating_angle</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c"># Tack completed</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s">&#39;info&#39;</span><span class="p">,</span> <span class="s">&#39;Finished tack (</span><span class="si">%s</span><span class="s">)&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sailing_state</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">tack_voting</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">boat_wind_angle</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sailing_state</span> <span class="o">=</span> <span class="s">&#39;normal&#39;</span>
+
+        <span class="n">on_port_tack</span> <span class="o">=</span> <span class="n">boat_wind_angle</span> <span class="o">&gt;</span> <span class="mi">0</span>
+
+        <span class="n">wp_heading</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">position_ll</span><span class="o">.</span><span class="n">heading_initial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">waypoint</span><span class="p">)</span>
+        <span class="n">wp_wind_angle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">heading_to_wind_angle</span><span class="p">(</span><span class="n">wp_heading</span><span class="p">)</span>
+        <span class="c"># Tack voting: 0 for starboard tack, 1 for port tack</span>
+        <span class="n">current_tack_vote</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">wp_wind_angle</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tack_voting</span><span class="o">.</span><span class="n">vote</span><span class="p">(</span><span class="n">current_tack_vote</span><span class="p">)</span>
+
+        <span class="n">tack_now</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tack_voting</span><span class="o">.</span><span class="n">tack_now</span><span class="p">(</span><span class="n">on_port_tack</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">tack_now</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">on_port_tack</span><span class="p">:</span>
+                <span class="n">tack_to</span> <span class="o">=</span> <span class="s">&#39;tack_to_stbd_tack&#39;</span>
+                <span class="n">beating_angle</span> <span class="o">=</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">beating_angle</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">tack_to</span> <span class="o">=</span> <span class="s">&#39;tack_to_port_tack&#39;</span>
+                <span class="n">beating_angle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">beating_angle</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sailing_state</span> <span class="o">=</span> <span class="n">tack_to</span>
+            <span class="k">return</span> <span class="n">tack_to</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">wind_angle_to_heading</span><span class="p">(</span><span class="n">beating_angle</span><span class="p">)</span>
+
+        <span class="c"># Continue on our current tack</span>
+        <span class="n">goal_wind_angle</span> <span class="o">=</span> <span class="n">wp_wind_angle</span>
+        <span class="k">if</span> <span class="n">on_port_tack</span><span class="p">:</span>
+            <span class="n">goal_wind_angle</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">goal_wind_angle</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">beating_angle</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># On the starboard tack</span>
+            <span class="n">goal_wind_angle</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">goal_wind_angle</span><span class="p">,</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">beating_angle</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">debug_pub</span><span class="p">(</span><span class="s">&#39;goal_wind_angle&#39;</span><span class="p">,</span> <span class="n">goal_wind_angle</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="s">&#39;normal&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">wind_angle_to_heading</span><span class="p">(</span><span class="n">goal_wind_angle</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Soton Pirate RoBoat 0.0.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2016, Soton Pirates.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

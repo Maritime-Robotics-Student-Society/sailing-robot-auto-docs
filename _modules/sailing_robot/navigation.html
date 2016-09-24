@@ -1,0 +1,256 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sailing_robot.navigation &mdash; Soton Pirate RoBoat 0.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Soton Pirate RoBoat 0.0.0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Soton Pirate RoBoat 0.0.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sailing_robot.navigation</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Common navigation machinery used by different modules&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">from</span> <span class="nn">LatLon</span> <span class="kn">import</span> <span class="n">LatLon</span>
+<span class="kn">from</span> <span class="nn">pyproj</span> <span class="kn">import</span> <span class="n">Proj</span>
+<span class="kn">from</span> <span class="nn">shapely.geometry</span> <span class="kn">import</span> <span class="n">Point</span><span class="p">,</span> <span class="n">Polygon</span>
+
+<div class="viewcode-block" id="Navigation"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.navigation.Navigation">[docs]</a><span class="k">class</span> <span class="nc">Navigation</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Common navigation machinery used by different modules.</span>
+<span class="sd">    </span>
+<span class="sd">    Stores boat position (both lat/long and x/y based on UTM projection), and</span>
+<span class="sd">    heading, along with apparent wind angle.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+                <span class="n">beating_angle</span><span class="o">=</span><span class="mi">45</span><span class="p">,</span> <span class="n">utm_zone</span><span class="o">=</span><span class="mi">29</span><span class="p">,</span> <span class="n">jibe_to_turn</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                <span class="n">safety_zone_ll</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">safety_zone_margin</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        beating_angle : Closest absolute angle relative to the wind that we can</span>
+<span class="sd">            sail</span>
+<span class="sd">        utm_zone : Zone number of the UTM system to use. Southampton is in</span>
+<span class="sd">            zone 30, Portugal in zone 29. http://www.dmap.co.uk/utmworld.htm</span>
+<span class="sd">            Distance calculations will be less accurate the further from the</span>
+<span class="sd">            specified zone you are.</span>
+<span class="sd">        jibe_to_turn : True to turn by jibing instead of tacking.</span>
+<span class="sd">        safety_zone_ll : A series of lat/lon points we should stay within.</span>
+<span class="sd">        safety_zone_margin : The safety buffer (in metres) to stay inside</span>
+<span class="sd">            the bounding box.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">projection</span> <span class="o">=</span> <span class="n">Proj</span><span class="p">(</span><span class="n">proj</span><span class="o">=</span><span class="s">&#39;utm&#39;</span><span class="p">,</span> <span class="n">zone</span><span class="o">=</span><span class="n">utm_zone</span><span class="p">,</span> <span class="n">ellps</span><span class="o">=</span><span class="s">&#39;WGS84&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">position_ll</span> <span class="o">=</span> <span class="n">ll</span> <span class="o">=</span> <span class="n">LatLon</span><span class="p">(</span><span class="mf">50.8</span><span class="p">,</span> <span class="mf">1.02</span><span class="p">)</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">latlon_to_utm</span><span class="p">(</span><span class="n">ll</span><span class="o">.</span><span class="n">lat</span><span class="o">.</span><span class="n">decimal_degree</span><span class="p">,</span> <span class="n">ll</span><span class="o">.</span><span class="n">lon</span><span class="o">.</span><span class="n">decimal_degree</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">position_xy</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">heading</span> <span class="o">=</span> <span class="mf">0.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wind_direction</span> <span class="o">=</span> <span class="mf">0.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">beating_angle</span> <span class="o">=</span> <span class="n">beating_angle</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">jibe_to_turn</span> <span class="o">=</span> <span class="n">jibe_to_turn</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">safety_zone_ll</span> <span class="o">=</span> <span class="n">safety_zone_ll</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">safety_zone_margin</span> <span class="o">=</span> <span class="n">safety_zone_margin</span>
+        <span class="k">if</span> <span class="n">safety_zone_ll</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">safety_zone</span> <span class="o">=</span> <span class="n">Polygon</span><span class="p">([</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">latlon_to_utm</span><span class="p">(</span><span class="o">*</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">safety_zone_ll</span>
+            <span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">safety_zone_inner</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">safety_zone</span><span class="o">.</span><span class="n">buffer</span><span class="p">(</span><span class="o">-</span><span class="n">safety_zone_margin</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">safety_zone</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">safety_zone_inner</span> <span class="o">=</span> <span class="bp">None</span>
+    
+<div class="viewcode-block" id="Navigation.update_position"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.navigation.Navigation.update_position">[docs]</a>    <span class="k">def</span> <span class="nf">update_position</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">position_ll</span> <span class="o">=</span> <span class="n">LatLon</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">latitude</span><span class="p">,</span> <span class="n">msg</span><span class="o">.</span><span class="n">longitude</span><span class="p">)</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">latlon_to_utm</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">latitude</span><span class="p">,</span> <span class="n">msg</span><span class="o">.</span><span class="n">longitude</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">position_xy</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Navigation.latlon_to_utm"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.navigation.Navigation.latlon_to_utm">[docs]</a>    <span class="k">def</span> <span class="nf">latlon_to_utm</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="n">lon</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns (x, y) coordinates in metres&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">projection</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="Navigation.utm_to_latlon"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.navigation.Navigation.utm_to_latlon">[docs]</a>    <span class="k">def</span> <span class="nf">utm_to_latlon</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a LatLon object&quot;&quot;&quot;</span>
+        <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">projection</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">inverse</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">LatLon</span><span class="p">(</span><span class="n">lat</span><span class="p">,</span> <span class="n">lon</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Navigation.update_heading"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.navigation.Navigation.update_heading">[docs]</a>    <span class="k">def</span> <span class="nf">update_heading</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">heading</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">data</span>
+    </div>
+<div class="viewcode-block" id="Navigation.update_wind_direction"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.navigation.Navigation.update_wind_direction">[docs]</a>    <span class="k">def</span> <span class="nf">update_wind_direction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wind_direction</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">data</span>
+    </div>
+<div class="viewcode-block" id="Navigation.absolute_wind_direction"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.navigation.Navigation.absolute_wind_direction">[docs]</a>    <span class="k">def</span> <span class="nf">absolute_wind_direction</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convert apparent wind direction to absolute wind direction&quot;&quot;&quot;</span>
+        <span class="c"># This assumes that our speed is negligible relative to wind speed.</span>
+        <span class="k">return</span> <span class="n">angleSum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">heading</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_direction</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Navigation.angle_to_wind"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.navigation.Navigation.angle_to_wind">[docs]</a>    <span class="k">def</span> <span class="nf">angle_to_wind</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate angle relative to wind (-180 to 180)</span>
+
+<span class="sd">        Angle relative to wind is reversed from wind direction: if the wind is</span>
+<span class="sd">        coming from 90, the angle relative to the wind is -90.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">wd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_direction</span>
+        <span class="k">if</span> <span class="n">wd</span> <span class="o">&gt;</span> <span class="mi">180</span><span class="p">:</span>
+            <span class="n">wd</span> <span class="o">-=</span> <span class="mi">360</span>
+        <span class="k">return</span> <span class="o">-</span><span class="n">wd</span>
+</div>
+<div class="viewcode-block" id="Navigation.heading_to_wind_angle"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.navigation.Navigation.heading_to_wind_angle">[docs]</a>    <span class="k">def</span> <span class="nf">heading_to_wind_angle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">heading</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convert a compass heading (0-360) to an angle relative to the wind (+-180)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">angle_subtract</span><span class="p">(</span><span class="n">heading</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">absolute_wind_direction</span><span class="p">())</span>
+</div>
+<div class="viewcode-block" id="Navigation.wind_angle_to_heading"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.navigation.Navigation.wind_angle_to_heading">[docs]</a>    <span class="k">def</span> <span class="nf">wind_angle_to_heading</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wind_angle</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convert angle relative to the wind (+-180) to a compass heading (0-360).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">angleSum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">absolute_wind_direction</span><span class="p">(),</span> <span class="n">wind_angle</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Navigation.check_safety_zone"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.navigation.Navigation.check_safety_zone">[docs]</a>    <span class="k">def</span> <span class="nf">check_safety_zone</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check if the boat is within the safety zone.</span>
+
+<span class="sd">        0 : Comfortably inside the safety zone (or no safety zone specified)</span>
+<span class="sd">        1 : Inside the safety zone, but in the margin</span>
+<span class="sd">        2 : Outside the safety zone</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">safety_zone</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">position_xy</span><span class="o">.</span><span class="n">within</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">safety_zone_inner</span><span class="p">):</span>
+            <span class="k">return</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">position_xy</span><span class="o">.</span><span class="n">within</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">safety_zone</span><span class="p">):</span>
+            <span class="k">return</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="mi">2</span>
+</div>
+<div class="viewcode-block" id="Navigation.distance_and_heading"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.navigation.Navigation.distance_and_heading">[docs]</a>    <span class="k">def</span> <span class="nf">distance_and_heading</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wp</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate the distance and heading from current position to wp.</span>
+
+<span class="sd">        wp should both be a shapely.geometry.Point object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dx</span> <span class="o">=</span> <span class="n">wp</span><span class="o">.</span><span class="n">x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">position_xy</span><span class="o">.</span><span class="n">x</span>
+        <span class="n">dy</span> <span class="o">=</span> <span class="n">wp</span><span class="o">.</span><span class="n">y</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">position_xy</span><span class="o">.</span><span class="n">y</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="p">(</span><span class="n">dx</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">dy</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">**</span> <span class="mf">0.5</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">degrees</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">atan2</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">))</span> <span class="o">%</span> <span class="mi">360</span>
+        <span class="k">return</span> <span class="n">d</span><span class="p">,</span> <span class="n">h</span>
+</div>
+<div class="viewcode-block" id="Navigation.subscribe_topics"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.navigation.Navigation.subscribe_topics">[docs]</a>    <span class="k">def</span> <span class="nf">subscribe_topics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Subscribe to ROS topics to keep this nav object up to date.</span>
+<span class="sd">        </span>
+<span class="sd">        Subscribes to /position, /heading and /wind_direction_apparent.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">rospy</span> <span class="kn">import</span> <span class="n">Subscriber</span>
+        <span class="kn">from</span> <span class="nn">std_msgs.msg</span> <span class="kn">import</span> <span class="n">Float32</span><span class="p">,</span> <span class="n">Float64</span>
+        <span class="kn">from</span> <span class="nn">sensor_msgs.msg</span> <span class="kn">import</span> <span class="n">NavSatFix</span>
+        <span class="n">Subscriber</span><span class="p">(</span><span class="s">&#39;heading&#39;</span><span class="p">,</span> <span class="n">Float32</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_heading</span><span class="p">)</span>
+        <span class="n">Subscriber</span><span class="p">(</span><span class="s">&#39;wind_direction_apparent&#39;</span><span class="p">,</span> <span class="n">Float64</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_wind_direction</span><span class="p">)</span>
+        <span class="n">Subscriber</span><span class="p">(</span><span class="s">&#39;position&#39;</span><span class="p">,</span> <span class="n">NavSatFix</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_position</span><span class="p">)</span>
+
+<span class="c">################</span>
+<span class="c"># General utility functions</span>
+<span class="c">################</span>
+</div></div>
+<div class="viewcode-block" id="angleSum"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.navigation.angleSum">[docs]</a><span class="k">def</span> <span class="nf">angleSum</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Add two angles in degrees, returning a value mod 360</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">a</span><span class="o">+</span><span class="n">b</span><span class="p">)</span><span class="o">%</span><span class="mi">360</span>
+</div>
+<div class="viewcode-block" id="angleAbsDistance"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.navigation.angleAbsDistance">[docs]</a><span class="k">def</span> <span class="nf">angleAbsDistance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Magnitude of the difference between two angles.</span>
+<span class="sd">    </span>
+<span class="sd">    Result should always be between 0 and 180.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">distanceA</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">((</span><span class="n">a</span> <span class="o">-</span> <span class="n">b</span><span class="p">)</span> <span class="o">%</span> <span class="mi">360</span><span class="p">)</span>
+    <span class="n">distanceB</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">((</span><span class="n">b</span> <span class="o">-</span> <span class="n">a</span><span class="p">)</span> <span class="o">%</span> <span class="mi">360</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">distanceA</span><span class="p">,</span> <span class="n">distanceB</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="angle_subtract"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.navigation.angle_subtract">[docs]</a><span class="k">def</span> <span class="nf">angle_subtract</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Find the difference between two angles.</span>
+<span class="sd">    </span>
+<span class="sd">    The result should be between -180 (if a&lt;b) and +180 (if a&gt;b)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span> <span class="o">-</span> <span class="n">b</span><span class="p">)</span> <span class="o">%</span> <span class="mi">360</span>
+    <span class="k">if</span> <span class="n">res</span> <span class="o">&gt;</span> <span class="mi">180</span><span class="p">:</span>
+        <span class="n">res</span> <span class="o">-=</span> <span class="mi">360</span>
+    <span class="k">return</span> <span class="n">res</span>
+</div>
+<div class="viewcode-block" id="angle_average"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.navigation.angle_average">[docs]</a><span class="k">def</span> <span class="nf">angle_average</span><span class="p">(</span><span class="n">angle_list</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute the average angle of a list of angles (the result is % 360)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">degrees</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">atan2</span><span class="p">(</span><span class="nb">sum</span><span class="p">([</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">angle_list</span><span class="p">]),</span>
+                                   <span class="nb">sum</span><span class="p">([</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">angle_list</span><span class="p">])))</span> <span class="o">%</span> <span class="mi">360</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Soton Pirate RoBoat 0.0.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2016, Soton Pirates.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

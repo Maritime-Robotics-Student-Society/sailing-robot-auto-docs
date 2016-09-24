@@ -1,0 +1,27 @@
+Available ROS Nodes
+===================
+
+.. toctree::
+   :maxdepth: 2
+
+   actuator_driver_servos
+   debugging_2D_plot
+   debugging_blink_on_sailing_state
+   tack
+   simulation_heading
+   dummy_heading
+   actuator_demand_rudder
+   dummy_apparent_wind_direction
+   simulation_wind_direction
+   actuator_demand_sail
+   sensor_driver_wind_direction
+   simulation_position
+   tasks
+   debugging_gps_log
+   simulation_wind_speed
+   sensor_driver_gps
+   sensor_driver_imu
+   debugging_dashboard
+   simulation_velocity
+   sensor_processed_wind_direction
+   dummy_position

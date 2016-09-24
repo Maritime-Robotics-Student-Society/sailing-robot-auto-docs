@@ -1,0 +1,171 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sailing_robot.tasks_ros &mdash; Soton Pirate RoBoat 0.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Soton Pirate RoBoat 0.0.0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Soton Pirate RoBoat 0.0.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sailing_robot.tasks_ros</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Tasks with ROS debugging machinery.</span>
+
+<span class="sd">This is separate from the base task running machinery so that that can be tested</span>
+<span class="sd">without ROS being involved.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">importlib</span>
+<span class="kn">import</span> <span class="nn">rospy</span>
+
+<span class="kn">from</span> <span class="nn">.tasks</span> <span class="kn">import</span> <span class="n">TasksRunner</span>
+
+<div class="viewcode-block" id="RosTasksRunner"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.tasks_ros.RosTasksRunner">[docs]</a><span class="k">class</span> <span class="nc">RosTasksRunner</span><span class="p">(</span><span class="n">TasksRunner</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">debug_topics</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">register_debug_topics</span><span class="p">([</span>
+            <span class="p">(</span><span class="s">&#39;task_ix&#39;</span><span class="p">,</span> <span class="s">&#39;Int16&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s">&#39;active_task_kind&#39;</span><span class="p">,</span> <span class="s">&#39;String&#39;</span><span class="p">),</span>
+        <span class="p">])</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">RosTasksRunner</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="RosTasksRunner.log"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.tasks_ros.RosTasksRunner.log">[docs]</a>    <span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="o">*</span><span class="n">values</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Log output through ROS.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">level</span> <span class="o">==</span> <span class="s">&#39;fatal&#39;</span><span class="p">:</span>
+            <span class="n">rospy</span><span class="o">.</span><span class="n">logfatal</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="o">*</span><span class="n">values</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">level</span> <span class="o">==</span> <span class="s">&#39;error&#39;</span><span class="p">:</span>
+            <span class="n">rospy</span><span class="o">.</span><span class="n">logerr</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="o">*</span><span class="n">values</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">level</span> <span class="o">==</span> <span class="s">&#39;warning&#39;</span><span class="p">:</span>
+            <span class="n">rospy</span><span class="o">.</span><span class="n">logwarn</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="o">*</span><span class="n">values</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">level</span> <span class="o">==</span> <span class="s">&#39;info&#39;</span><span class="p">:</span>
+            <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="o">*</span><span class="n">values</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">level</span> <span class="o">==</span> <span class="s">&#39;debug&#39;</span><span class="p">:</span>
+            <span class="n">rospy</span><span class="o">.</span><span class="n">logdebug</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="o">*</span><span class="n">values</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">rospy</span><span class="o">.</span><span class="n">logerr</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="o">*</span><span class="n">values</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="RosTasksRunner.register_debug_topics"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.tasks_ros.RosTasksRunner.register_debug_topics">[docs]</a>    <span class="k">def</span> <span class="nf">register_debug_topics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">topics</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sets up publishers for a task&#39;s debugging topics.</span>
+<span class="sd">        </span>
+<span class="sd">        *topics* should be a list of pairs, (topic_name, data_type), e.g.:</span>
+<span class="sd">        </span>
+<span class="sd">            [(&#39;next_wp&#39;, &#39;sensor_msgs.msg:NavSatFix&#39;)]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">topic</span><span class="p">,</span> <span class="n">datatype_s</span><span class="p">)</span> <span class="ow">in</span> <span class="n">topics</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">topic</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug_topics</span><span class="p">)</span> \
+                    <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">debug_topics</span><span class="p">[</span><span class="n">topic</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">datatype_s</span><span class="p">):</span>
+                <span class="k">continue</span>  <span class="c"># Already registered</span>
+            
+            <span class="k">if</span> <span class="s">&#39;:&#39;</span> <span class="ow">in</span> <span class="n">datatype_s</span><span class="p">:</span>
+                <span class="n">dt_mod</span><span class="p">,</span> <span class="n">dt_cls</span> <span class="o">=</span> <span class="n">datatype_s</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;:&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">dt_mod</span> <span class="o">=</span> <span class="s">&#39;std_msgs.msg&#39;</span>
+                <span class="n">dt_cls</span> <span class="o">=</span> <span class="n">datatype_s</span>
+            <span class="n">mod</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="n">dt_mod</span><span class="p">)</span>
+            <span class="n">dt</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span> <span class="n">dt_cls</span><span class="p">)</span>
+            
+            <span class="n">pub</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Publisher</span><span class="p">(</span><span class="n">topic</span><span class="p">,</span> <span class="n">dt</span><span class="p">,</span> <span class="n">queue_size</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">debug_topics</span><span class="p">[</span><span class="n">topic</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">datatype_s</span><span class="p">,</span> <span class="n">pub</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="RosTasksRunner.debug_pub"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.tasks_ros.RosTasksRunner.debug_pub">[docs]</a>    <span class="k">def</span> <span class="nf">debug_pub</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">topic</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Publish a value for a debugging topic.</span>
+<span class="sd">        </span>
+<span class="sd">        *topic* should be the name of a topic previously set up by</span>
+<span class="sd">        register_debug_topics()</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">datatype</span><span class="p">,</span> <span class="n">pub</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug_topics</span><span class="p">[</span><span class="n">topic</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s">&#39;warning&#39;</span><span class="p">,</span> <span class="s">&#39;Tried to publish to missing topic: </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">topic</span><span class="p">)</span>
+
+        <span class="n">pub</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">_make_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">taskdict</span><span class="p">):</span>
+        <span class="n">task</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">RosTasksRunner</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_make_task</span><span class="p">(</span><span class="n">taskdict</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">register_debug_topics</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">debug_topics</span><span class="p">)</span>
+        <span class="n">task</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">log</span>
+        <span class="n">task</span><span class="o">.</span><span class="n">debug_pub</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug_pub</span>
+        <span class="n">task</span><span class="o">.</span><span class="n">init_ros</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">task</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Soton Pirate RoBoat 0.0.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2016, Soton Pirates.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

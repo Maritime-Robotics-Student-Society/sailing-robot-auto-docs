@@ -1,0 +1,4 @@
+debugging_dashboard
+===================
+
+Supply browser view of ros topics in local network

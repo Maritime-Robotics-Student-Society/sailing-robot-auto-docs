@@ -1,0 +1,143 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sailing_robot.heading_planning_dumb &mdash; Soton Pirate RoBoat 0.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Soton Pirate RoBoat 0.0.0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Soton Pirate RoBoat 0.0.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sailing_robot.heading_planning_dumb</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">LatLon</span> <span class="kn">as</span> <span class="nn">ll</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">from</span> <span class="nn">shapely.geometry</span> <span class="kn">import</span> <span class="n">Point</span>
+
+<span class="kn">from</span> <span class="nn">.taskbase</span> <span class="kn">import</span> <span class="n">TaskBase</span>
+
+<div class="viewcode-block" id="HeadingPlan"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.heading_planning_dumb.HeadingPlan">[docs]</a><span class="k">class</span> <span class="nc">HeadingPlan</span><span class="p">(</span><span class="n">TaskBase</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nav</span><span class="p">,</span>
+            <span class="n">waypoint</span><span class="o">=</span><span class="n">ll</span><span class="o">.</span><span class="n">LatLon</span><span class="p">(</span><span class="mf">50.742810</span><span class="p">,</span> <span class="mf">1.014469</span><span class="p">),</span> <span class="c"># somewhere in the solent</span>
+            <span class="n">target_radius</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">waypoint_id</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+            <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Heading planning machinery, dumb version.</span>
+<span class="sd">        </span>
+<span class="sd">        For testing purposes, this believes that the boat can go in any</span>
+<span class="sd">        direction, including directly upwind. It never tries to tack.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nav</span> <span class="o">=</span> <span class="n">nav</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">waypoint</span> <span class="o">=</span> <span class="n">waypoint</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">waypoint_id</span> <span class="o">=</span> <span class="n">waypoint_id</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">latlon_to_utm</span><span class="p">(</span><span class="n">waypoint</span><span class="o">.</span><span class="n">lat</span><span class="o">.</span><span class="n">decimal_degree</span><span class="p">,</span> <span class="n">waypoint</span><span class="o">.</span><span class="n">lon</span><span class="o">.</span><span class="n">decimal_degree</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">waypoint_xy</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_area</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">waypoint_xy</span><span class="o">.</span><span class="n">buffer</span><span class="p">(</span><span class="n">target_radius</span><span class="p">)</span>
+    
+<div class="viewcode-block" id="HeadingPlan.start"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.heading_planning_dumb.HeadingPlan.start">[docs]</a>    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+</div>
+<div class="viewcode-block" id="HeadingPlan.check_end_condition"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.heading_planning_dumb.HeadingPlan.check_end_condition">[docs]</a>    <span class="k">def</span> <span class="nf">check_end_condition</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">position_xy</span><span class="o">.</span><span class="n">within</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target_area</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="HeadingPlan.distance_heading_to_waypoint"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.heading_planning_dumb.HeadingPlan.distance_heading_to_waypoint">[docs]</a>    <span class="k">def</span> <span class="nf">distance_heading_to_waypoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">dx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">waypoint_xy</span><span class="o">.</span><span class="n">x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">position_xy</span><span class="o">.</span><span class="n">x</span>
+        <span class="n">dy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">waypoint_xy</span><span class="o">.</span><span class="n">y</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">position_xy</span><span class="o">.</span><span class="n">y</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="p">(</span><span class="n">dx</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">dy</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">**</span> <span class="mf">0.5</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">degrees</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">atan2</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">))</span> <span class="o">%</span> <span class="mi">360</span>
+        <span class="k">return</span> <span class="n">d</span><span class="p">,</span> <span class="n">h</span>
+</div>
+    <span class="n">debug_topics</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="s">&#39;distance_to_waypoint&#39;</span><span class="p">,</span> <span class="s">&#39;Float32&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s">&#39;heading_to_waypoint&#39;</span><span class="p">,</span> <span class="s">&#39;Float32&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s">&#39;latest_waypoint_id&#39;</span><span class="p">,</span> <span class="s">&#39;String&#39;</span><span class="p">),</span>
+    <span class="p">]</span>
+
+<div class="viewcode-block" id="HeadingPlan.calculate_state_and_goal"><a class="viewcode-back" href="../../sailing_robot.html#sailing_robot.heading_planning_dumb.HeadingPlan.calculate_state_and_goal">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_state_and_goal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Work out what we want the boat to do</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dwp</span><span class="p">,</span> <span class="n">hwp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">distance_heading_to_waypoint</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">debug_pub</span><span class="p">(</span><span class="s">&#39;distance_to_waypoint&#39;</span><span class="p">,</span> <span class="n">dwp</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">debug_pub</span><span class="p">(</span><span class="s">&#39;heading_to_waypoint&#39;</span><span class="p">,</span> <span class="n">hwp</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">debug_pub</span><span class="p">(</span><span class="s">&#39;latest_waypoint_id&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">waypoint_id</span><span class="p">)</span>
+        <span class="n">wp_heading</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">position_ll</span><span class="o">.</span><span class="n">heading_initial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">waypoint</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s">&#39;normal&#39;</span><span class="p">,</span> <span class="n">wp_heading</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Soton Pirate RoBoat 0.0.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2016, Soton Pirates.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>
