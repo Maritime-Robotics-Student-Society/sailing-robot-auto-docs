@@ -1,0 +1,725 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sailing_robot package &mdash; Soton Pirate RoBoat 0.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Soton Pirate RoBoat 0.0.0 documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">Soton Pirate RoBoat 0.0.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="sailing-robot-package">
+<h1>sailing_robot package<a class="headerlink" href="#sailing-robot-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-sailing_robot.heading_planning">
+<span id="sailing-robot-heading-planning-module"></span><h2>sailing_robot.heading_planning module<a class="headerlink" href="#module-sailing_robot.heading_planning" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sailing_robot.heading_planning.HeadingPlan">
+<em class="property">class </em><tt class="descclassname">sailing_robot.heading_planning.</tt><tt class="descname">HeadingPlan</tt><big>(</big><em>nav</em>, <em>tack_line_offset=0.01</em>, <em>waypoint=Latitude 50.74281</em>, <em>Longitude 1.014469</em>, <em>target_radius=2</em>, <em>tack_decision_samples=100</em>, <em>tack_decision_threshold=0.75</em>, <em>waypoint_id=None</em><big>)</big><a class="reference internal" href="_modules/sailing_robot/heading_planning.html#HeadingPlan"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.heading_planning.HeadingPlan" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#sailing_robot.taskbase.TaskBase" title="sailing_robot.taskbase.TaskBase"><tt class="xref py py-class docutils literal"><span class="pre">sailing_robot.taskbase.TaskBase</span></tt></a></p>
+<dl class="method">
+<dt id="sailing_robot.heading_planning.HeadingPlan.calculate_state_and_goal">
+<tt class="descname">calculate_state_and_goal</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sailing_robot/heading_planning.html#HeadingPlan.calculate_state_and_goal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.heading_planning.HeadingPlan.calculate_state_and_goal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Work out what we want the boat to do</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sailing_robot.heading_planning.HeadingPlan.check_end_condition">
+<tt class="descname">check_end_condition</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sailing_robot/heading_planning.html#HeadingPlan.check_end_condition"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.heading_planning.HeadingPlan.check_end_condition" title="Permalink to this definition">¶</a></dt>
+<dd><p>Are we there yet?</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sailing_robot.heading_planning.HeadingPlan.debug_topics">
+<tt class="descname">debug_topics</tt><em class="property"> = [('heading_to_waypoint', 'Float32'), ('distance_to_waypoint', 'Float32'), ('goal_wind_angle', 'Float32'), ('latest_waypoint_id', 'String')]</em><a class="headerlink" href="#sailing_robot.heading_planning.HeadingPlan.debug_topics" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="sailing_robot.heading_planning.HeadingPlan.distance_heading_to_waypoint">
+<tt class="descname">distance_heading_to_waypoint</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sailing_robot/heading_planning.html#HeadingPlan.distance_heading_to_waypoint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.heading_planning.HeadingPlan.distance_heading_to_waypoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate where we are relative to the waypoint, for debugging.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sailing_robot.heading_planning.HeadingPlan.start">
+<tt class="descname">start</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sailing_robot/heading_planning.html#HeadingPlan.start"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.heading_planning.HeadingPlan.start" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sailing_robot.heading_planning.TackVoting">
+<em class="property">class </em><tt class="descclassname">sailing_robot.heading_planning.</tt><tt class="descname">TackVoting</tt><big>(</big><em>nsamples</em>, <em>threshold</em><big>)</big><a class="reference internal" href="_modules/sailing_robot/heading_planning.html#TackVoting"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.heading_planning.TackVoting" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="http://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></a></p>
+<p>Handles a rolling vote of which tack we want to be on.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>nsamples</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; N samples for voting. Sample frequency is determined by ROS rate.</li>
+<li><strong>threshold</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Number of votes to change tack. Should be &gt; (nsamples/2)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="sailing_robot.heading_planning.TackVoting.reset">
+<tt class="descname">reset</tt><big>(</big><em>current_tack</em><big>)</big><a class="reference internal" href="_modules/sailing_robot/heading_planning.html#TackVoting.reset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.heading_planning.TackVoting.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set all votes one way.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>current_tack</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; 0 on startboard tack, 1 on port tack.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sailing_robot.heading_planning.TackVoting.tack_now">
+<tt class="descname">tack_now</tt><big>(</big><em>current_tack</em><big>)</big><a class="reference internal" href="_modules/sailing_robot/heading_planning.html#TackVoting.tack_now"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.heading_planning.TackVoting.tack_now" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the current result - True to tack now.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>current_tack</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; 0 if on starboard tack now, 1 if on port tack</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sailing_robot.heading_planning.TackVoting.vote">
+<tt class="descname">vote</tt><big>(</big><em>value</em><big>)</big><a class="reference internal" href="_modules/sailing_robot/heading_planning.html#TackVoting.vote"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.heading_planning.TackVoting.vote" title="Permalink to this definition">¶</a></dt>
+<dd><p>Push one vote.</p>
+<p>0 votes for starboard tack, 1 for port.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-sailing_robot.heading_planning_dumb">
+<span id="sailing-robot-heading-planning-dumb-module"></span><h2>sailing_robot.heading_planning_dumb module<a class="headerlink" href="#module-sailing_robot.heading_planning_dumb" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sailing_robot.heading_planning_dumb.HeadingPlan">
+<em class="property">class </em><tt class="descclassname">sailing_robot.heading_planning_dumb.</tt><tt class="descname">HeadingPlan</tt><big>(</big><em>nav</em>, <em>waypoint=Latitude 50.74281</em>, <em>Longitude 1.014469</em>, <em>target_radius=2</em>, <em>waypoint_id=None</em><big>)</big><a class="reference internal" href="_modules/sailing_robot/heading_planning_dumb.html#HeadingPlan"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.heading_planning_dumb.HeadingPlan" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#sailing_robot.taskbase.TaskBase" title="sailing_robot.taskbase.TaskBase"><tt class="xref py py-class docutils literal"><span class="pre">sailing_robot.taskbase.TaskBase</span></tt></a></p>
+<dl class="method">
+<dt id="sailing_robot.heading_planning_dumb.HeadingPlan.calculate_state_and_goal">
+<tt class="descname">calculate_state_and_goal</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sailing_robot/heading_planning_dumb.html#HeadingPlan.calculate_state_and_goal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.heading_planning_dumb.HeadingPlan.calculate_state_and_goal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Work out what we want the boat to do</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sailing_robot.heading_planning_dumb.HeadingPlan.check_end_condition">
+<tt class="descname">check_end_condition</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sailing_robot/heading_planning_dumb.html#HeadingPlan.check_end_condition"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.heading_planning_dumb.HeadingPlan.check_end_condition" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sailing_robot.heading_planning_dumb.HeadingPlan.debug_topics">
+<tt class="descname">debug_topics</tt><em class="property"> = [('distance_to_waypoint', 'Float32'), ('heading_to_waypoint', 'Float32'), ('latest_waypoint_id', 'String')]</em><a class="headerlink" href="#sailing_robot.heading_planning_dumb.HeadingPlan.debug_topics" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="sailing_robot.heading_planning_dumb.HeadingPlan.distance_heading_to_waypoint">
+<tt class="descname">distance_heading_to_waypoint</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sailing_robot/heading_planning_dumb.html#HeadingPlan.distance_heading_to_waypoint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.heading_planning_dumb.HeadingPlan.distance_heading_to_waypoint" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="sailing_robot.heading_planning_dumb.HeadingPlan.start">
+<tt class="descname">start</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sailing_robot/heading_planning_dumb.html#HeadingPlan.start"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.heading_planning_dumb.HeadingPlan.start" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-sailing_robot.navigation">
+<span id="sailing-robot-navigation-module"></span><h2>sailing_robot.navigation module<a class="headerlink" href="#module-sailing_robot.navigation" title="Permalink to this headline">¶</a></h2>
+<p>Common navigation machinery used by different modules</p>
+<dl class="class">
+<dt id="sailing_robot.navigation.Navigation">
+<em class="property">class </em><tt class="descclassname">sailing_robot.navigation.</tt><tt class="descname">Navigation</tt><big>(</big><em>beating_angle=45</em>, <em>utm_zone=29</em>, <em>jibe_to_turn=False</em>, <em>safety_zone_ll=None</em>, <em>safety_zone_margin=5</em><big>)</big><a class="reference internal" href="_modules/sailing_robot/navigation.html#Navigation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.navigation.Navigation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="http://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></a></p>
+<p>Common navigation machinery used by different modules.</p>
+<p>Stores boat position (both lat/long and x/y based on UTM projection), and
+heading, along with apparent wind angle.</p>
+<dl class="method">
+<dt id="sailing_robot.navigation.Navigation.absolute_wind_direction">
+<tt class="descname">absolute_wind_direction</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sailing_robot/navigation.html#Navigation.absolute_wind_direction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.navigation.Navigation.absolute_wind_direction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert apparent wind direction to absolute wind direction</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sailing_robot.navigation.Navigation.angle_to_wind">
+<tt class="descname">angle_to_wind</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sailing_robot/navigation.html#Navigation.angle_to_wind"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.navigation.Navigation.angle_to_wind" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate angle relative to wind (-180 to 180)</p>
+<p>Angle relative to wind is reversed from wind direction: if the wind is
+coming from 90, the angle relative to the wind is -90.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sailing_robot.navigation.Navigation.check_safety_zone">
+<tt class="descname">check_safety_zone</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sailing_robot/navigation.html#Navigation.check_safety_zone"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.navigation.Navigation.check_safety_zone" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the boat is within the safety zone.</p>
+<p>0 : Comfortably inside the safety zone (or no safety zone specified)
+1 : Inside the safety zone, but in the margin
+2 : Outside the safety zone</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sailing_robot.navigation.Navigation.distance_and_heading">
+<tt class="descname">distance_and_heading</tt><big>(</big><em>wp</em><big>)</big><a class="reference internal" href="_modules/sailing_robot/navigation.html#Navigation.distance_and_heading"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.navigation.Navigation.distance_and_heading" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the distance and heading from current position to wp.</p>
+<p>wp should both be a shapely.geometry.Point object</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sailing_robot.navigation.Navigation.heading_to_wind_angle">
+<tt class="descname">heading_to_wind_angle</tt><big>(</big><em>heading</em><big>)</big><a class="reference internal" href="_modules/sailing_robot/navigation.html#Navigation.heading_to_wind_angle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.navigation.Navigation.heading_to_wind_angle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a compass heading (0-360) to an angle relative to the wind (+-180)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sailing_robot.navigation.Navigation.latlon_to_utm">
+<tt class="descname">latlon_to_utm</tt><big>(</big><em>lat</em>, <em>lon</em><big>)</big><a class="reference internal" href="_modules/sailing_robot/navigation.html#Navigation.latlon_to_utm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.navigation.Navigation.latlon_to_utm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns (x, y) coordinates in metres</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sailing_robot.navigation.Navigation.subscribe_topics">
+<tt class="descname">subscribe_topics</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sailing_robot/navigation.html#Navigation.subscribe_topics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.navigation.Navigation.subscribe_topics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subscribe to ROS topics to keep this nav object up to date.</p>
+<p>Subscribes to /position, /heading and /wind_direction_apparent.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sailing_robot.navigation.Navigation.update_heading">
+<tt class="descname">update_heading</tt><big>(</big><em>msg</em><big>)</big><a class="reference internal" href="_modules/sailing_robot/navigation.html#Navigation.update_heading"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.navigation.Navigation.update_heading" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="sailing_robot.navigation.Navigation.update_position">
+<tt class="descname">update_position</tt><big>(</big><em>msg</em><big>)</big><a class="reference internal" href="_modules/sailing_robot/navigation.html#Navigation.update_position"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.navigation.Navigation.update_position" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="sailing_robot.navigation.Navigation.update_wind_direction">
+<tt class="descname">update_wind_direction</tt><big>(</big><em>msg</em><big>)</big><a class="reference internal" href="_modules/sailing_robot/navigation.html#Navigation.update_wind_direction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.navigation.Navigation.update_wind_direction" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="sailing_robot.navigation.Navigation.utm_to_latlon">
+<tt class="descname">utm_to_latlon</tt><big>(</big><em>x</em>, <em>y</em><big>)</big><a class="reference internal" href="_modules/sailing_robot/navigation.html#Navigation.utm_to_latlon"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.navigation.Navigation.utm_to_latlon" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a LatLon object</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sailing_robot.navigation.Navigation.wind_angle_to_heading">
+<tt class="descname">wind_angle_to_heading</tt><big>(</big><em>wind_angle</em><big>)</big><a class="reference internal" href="_modules/sailing_robot/navigation.html#Navigation.wind_angle_to_heading"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.navigation.Navigation.wind_angle_to_heading" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert angle relative to the wind (+-180) to a compass heading (0-360).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="sailing_robot.navigation.angleAbsDistance">
+<tt class="descclassname">sailing_robot.navigation.</tt><tt class="descname">angleAbsDistance</tt><big>(</big><em>a</em>, <em>b</em><big>)</big><a class="reference internal" href="_modules/sailing_robot/navigation.html#angleAbsDistance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.navigation.angleAbsDistance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Magnitude of the difference between two angles.</p>
+<p>Result should always be between 0 and 180.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sailing_robot.navigation.angleSum">
+<tt class="descclassname">sailing_robot.navigation.</tt><tt class="descname">angleSum</tt><big>(</big><em>a</em>, <em>b</em><big>)</big><a class="reference internal" href="_modules/sailing_robot/navigation.html#angleSum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.navigation.angleSum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add two angles in degrees, returning a value mod 360</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sailing_robot.navigation.angle_average">
+<tt class="descclassname">sailing_robot.navigation.</tt><tt class="descname">angle_average</tt><big>(</big><em>angle_list</em><big>)</big><a class="reference internal" href="_modules/sailing_robot/navigation.html#angle_average"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.navigation.angle_average" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the average angle of a list of angles (the result is % 360)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sailing_robot.navigation.angle_subtract">
+<tt class="descclassname">sailing_robot.navigation.</tt><tt class="descname">angle_subtract</tt><big>(</big><em>a</em>, <em>b</em><big>)</big><a class="reference internal" href="_modules/sailing_robot/navigation.html#angle_subtract"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.navigation.angle_subtract" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find the difference between two angles.</p>
+<p>The result should be between -180 (if a&lt;b) and +180 (if a&gt;b)</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-sailing_robot.pid_control">
+<span id="sailing-robot-pid-control-module"></span><h2>sailing_robot.pid_control module<a class="headerlink" href="#module-sailing_robot.pid_control" title="Permalink to this headline">¶</a></h2>
+<p>A simple PID controller class.</p>
+<p>This is a mostly literal C++ -&gt; Python translation of the ROS
+control_toolbox Pid class: <a class="reference external" href="http://ros.org/wiki/control_toolbox">http://ros.org/wiki/control_toolbox</a>.</p>
+<dl class="class">
+<dt id="sailing_robot.pid_control.PID">
+<em class="property">class </em><tt class="descclassname">sailing_robot.pid_control.</tt><tt class="descname">PID</tt><big>(</big><em>p_gain</em>, <em>i_gain</em>, <em>d_gain</em>, <em>i_max</em>, <em>i_min</em><big>)</big><a class="reference internal" href="_modules/sailing_robot/pid_control.html#PID"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.pid_control.PID" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="http://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></a></p>
+<p>A basic pid class.</p>
+<p>This class implements a generic structure that can be used to
+create a wide range of pid controllers. It can function
+independently or be subclassed to provide more specific controls
+based on a particular control loop.</p>
+<p>In particular, this class implements the standard pid equation:</p>
+<p>$command = -p_{term} - i_{term} - d_{term} $</p>
+<p>where:</p>
+<p>$ p_{term} = p_{gain} * p_{error} $
+$ i_{term} = i_{gain} * i_{error} $
+$ d_{term} = d_{gain} * d_{error} $
+$ i_{error} = i_{error} + p_{error} * dt $
+$ d_{error} = (p_{error} - p_{error last}) / dt $</p>
+<p>given:</p>
+<p>$ p_{error} = p_{state} - p_{target} $.</p>
+<dl class="attribute">
+<dt id="sailing_robot.pid_control.PID.cmd">
+<tt class="descname">cmd</tt><a class="reference internal" href="_modules/sailing_robot/pid_control.html#PID.cmd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.pid_control.PID.cmd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read-only access to the latest command.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sailing_robot.pid_control.PID.d_error">
+<tt class="descname">d_error</tt><a class="reference internal" href="_modules/sailing_robot/pid_control.html#PID.d_error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.pid_control.PID.d_error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read-only access to d_error.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sailing_robot.pid_control.PID.d_gain">
+<tt class="descname">d_gain</tt><a class="reference internal" href="_modules/sailing_robot/pid_control.html#PID.d_gain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.pid_control.PID.d_gain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read-only access to d_gain.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sailing_robot.pid_control.PID.i_error">
+<tt class="descname">i_error</tt><a class="reference internal" href="_modules/sailing_robot/pid_control.html#PID.i_error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.pid_control.PID.i_error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read-only access to i_error.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sailing_robot.pid_control.PID.i_gain">
+<tt class="descname">i_gain</tt><a class="reference internal" href="_modules/sailing_robot/pid_control.html#PID.i_gain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.pid_control.PID.i_gain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read-only access to i_gain.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sailing_robot.pid_control.PID.i_max">
+<tt class="descname">i_max</tt><a class="reference internal" href="_modules/sailing_robot/pid_control.html#PID.i_max"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.pid_control.PID.i_max" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read-only access to i_max.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sailing_robot.pid_control.PID.i_min">
+<tt class="descname">i_min</tt><a class="reference internal" href="_modules/sailing_robot/pid_control.html#PID.i_min"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.pid_control.PID.i_min" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read-only access to i_min.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sailing_robot.pid_control.PID.p_error">
+<tt class="descname">p_error</tt><a class="reference internal" href="_modules/sailing_robot/pid_control.html#PID.p_error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.pid_control.PID.p_error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read-only access to p_error.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sailing_robot.pid_control.PID.p_gain">
+<tt class="descname">p_gain</tt><a class="reference internal" href="_modules/sailing_robot/pid_control.html#PID.p_gain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.pid_control.PID.p_gain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read-only access to p_gain.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sailing_robot.pid_control.PID.reset">
+<tt class="descname">reset</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sailing_robot/pid_control.html#PID.reset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.pid_control.PID.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reset the state of this PID controller</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sailing_robot.pid_control.PID.set_gains">
+<tt class="descname">set_gains</tt><big>(</big><em>p_gain</em>, <em>i_gain</em>, <em>d_gain</em>, <em>i_max</em>, <em>i_min</em><big>)</big><a class="reference internal" href="_modules/sailing_robot/pid_control.html#PID.set_gains"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.pid_control.PID.set_gains" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set PID gains for the controller.</p>
+<dl class="docutils">
+<dt>Parameters:</dt>
+<dd>p_gain     The proportional gain.
+i_gain     The integral gain.
+d_gain     The derivative gain.
+i_max      The integral upper limit.
+i_min      The integral lower limit.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sailing_robot.pid_control.PID.update_PID">
+<tt class="descname">update_PID</tt><big>(</big><em>p_error</em>, <em>dt=None</em><big>)</big><a class="reference internal" href="_modules/sailing_robot/pid_control.html#PID.update_PID"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.pid_control.PID.update_PID" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the Pid loop with nonuniform time step size.</p>
+<dl class="docutils">
+<dt>Parameters:</dt>
+<dd><p class="first">p_error  Error since last call (p_state - p_target)
+dt       Change in time since last call, in seconds, or None.</p>
+<blockquote class="last">
+<div>If dt is None, then the system clock will be used to
+calculate the time since the last update.</div></blockquote>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="sailing_robot.pid_control.saturation">
+<tt class="descclassname">sailing_robot.pid_control.</tt><tt class="descname">saturation</tt><big>(</big><em>cmd</em>, <em>lowerlimits</em>, <em>higherlimits</em><big>)</big><a class="reference internal" href="_modules/sailing_robot/pid_control.html#saturation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.pid_control.saturation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-sailing_robot.pid_data">
+<span id="sailing-robot-pid-data-module"></span><h2>sailing_robot.pid_data module<a class="headerlink" href="#module-sailing_robot.pid_data" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sailing_robot.pid_data.PID_Data">
+<em class="property">class </em><tt class="descclassname">sailing_robot.pid_data.</tt><tt class="descname">PID_Data</tt><a class="reference internal" href="_modules/sailing_robot/pid_data.html#PID_Data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.pid_data.PID_Data" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="sailing_robot.pid_data.PID_Data.update_goal_heading">
+<tt class="descname">update_goal_heading</tt><big>(</big><em>msg</em><big>)</big><a class="reference internal" href="_modules/sailing_robot/pid_data.html#PID_Data.update_goal_heading"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.pid_data.PID_Data.update_goal_heading" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update goal heading data from higher level controller for PID controller
+:param msg:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sailing_robot.pid_data.PID_Data.update_heading">
+<tt class="descname">update_heading</tt><big>(</big><em>msg</em><big>)</big><a class="reference internal" href="_modules/sailing_robot/pid_data.html#PID_Data.update_heading"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.pid_data.PID_Data.update_heading" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get continuous update of current heading from sensors
+:param msg:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sailing_robot.pid_data.PID_Data.update_sailing_state">
+<tt class="descname">update_sailing_state</tt><big>(</big><em>msg</em><big>)</big><a class="reference internal" href="_modules/sailing_robot/pid_data.html#PID_Data.update_sailing_state"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.pid_data.PID_Data.update_sailing_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update sailing state data from higher level controller</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sailing_robot.pid_data.PID_Data.update_tack_rudder">
+<tt class="descname">update_tack_rudder</tt><big>(</big><em>msg</em><big>)</big><a class="reference internal" href="_modules/sailing_robot/pid_data.html#PID_Data.update_tack_rudder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.pid_data.PID_Data.update_tack_rudder" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-sailing_robot.sail_data">
+<span id="sailing-robot-sail-data-module"></span><h2>sailing_robot.sail_data module<a class="headerlink" href="#module-sailing_robot.sail_data" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sailing_robot.sail_data.Sail_data">
+<em class="property">class </em><tt class="descclassname">sailing_robot.sail_data.</tt><tt class="descname">Sail_data</tt><a class="reference internal" href="_modules/sailing_robot/sail_data.html#Sail_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.sail_data.Sail_data" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="sailing_robot.sail_data.Sail_data.update_apparent_wind_angle">
+<tt class="descname">update_apparent_wind_angle</tt><big>(</big><em>msg</em><big>)</big><a class="reference internal" href="_modules/sailing_robot/sail_data.html#Sail_data.update_apparent_wind_angle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.sail_data.Sail_data.update_apparent_wind_angle" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="sailing_robot.sail_data.Sail_data.update_true_wind_angle">
+<tt class="descname">update_true_wind_angle</tt><big>(</big><em>msg</em><big>)</big><a class="reference internal" href="_modules/sailing_robot/sail_data.html#Sail_data.update_true_wind_angle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.sail_data.Sail_data.update_true_wind_angle" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-sailing_robot.station_keeping">
+<span id="sailing-robot-station-keeping-module"></span><h2>sailing_robot.station_keeping module<a class="headerlink" href="#module-sailing_robot.station_keeping" title="Permalink to this headline">¶</a></h2>
+<p>Code for staying inside a target region</p>
+<dl class="class">
+<dt id="sailing_robot.station_keeping.StationKeeping">
+<em class="property">class </em><tt class="descclassname">sailing_robot.station_keeping.</tt><tt class="descname">StationKeeping</tt><big>(</big><em>nav</em>, <em>markers</em>, <em>buffer_width=10</em><big>)</big><a class="reference internal" href="_modules/sailing_robot/station_keeping.html#StationKeeping"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.station_keeping.StationKeeping" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#sailing_robot.taskbase.TaskBase" title="sailing_robot.taskbase.TaskBase"><tt class="xref py py-class docutils literal"><span class="pre">sailing_robot.taskbase.TaskBase</span></tt></a></p>
+<dl class="method">
+<dt id="sailing_robot.station_keeping.StationKeeping.calculate_state_and_goal">
+<tt class="descname">calculate_state_and_goal</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sailing_robot/station_keeping.html#StationKeeping.calculate_state_and_goal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.station_keeping.StationKeeping.calculate_state_and_goal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Work out what we want the boat to do</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sailing_robot.station_keeping.StationKeeping.start">
+<tt class="descname">start</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sailing_robot/station_keeping.html#StationKeeping.start"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.station_keeping.StationKeeping.start" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-sailing_robot.tack_control">
+<span id="sailing-robot-tack-control-module"></span><h2>sailing_robot.tack_control module<a class="headerlink" href="#module-sailing_robot.tack_control" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sailing_robot.tack_control.Tacking">
+<em class="property">class </em><tt class="descclassname">sailing_robot.tack_control.</tt><tt class="descname">Tacking</tt><a class="reference internal" href="_modules/sailing_robot/tack_control.html#Tacking"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.tack_control.Tacking" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="http://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></a></p>
+<dl class="method">
+<dt id="sailing_robot.tack_control.Tacking.calculate_sail_and_rudder">
+<tt class="descname">calculate_sail_and_rudder</tt><big>(</big><em>state</em><big>)</big><a class="reference internal" href="_modules/sailing_robot/tack_control.html#Tacking.calculate_sail_and_rudder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.tack_control.Tacking.calculate_sail_and_rudder" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-sailing_robot.taskbase">
+<span id="sailing-robot-taskbase-module"></span><h2>sailing_robot.taskbase module<a class="headerlink" href="#module-sailing_robot.taskbase" title="Permalink to this headline">¶</a></h2>
+<p>Base class for task classes.</p>
+<p>This has almost no implementation; the debugging methods are injected by
+tasks_ros. This allows us to test task classes outside ROS.</p>
+<dl class="class">
+<dt id="sailing_robot.taskbase.TaskBase">
+<em class="property">class </em><tt class="descclassname">sailing_robot.taskbase.</tt><tt class="descname">TaskBase</tt><a class="reference internal" href="_modules/sailing_robot/taskbase.html#TaskBase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.taskbase.TaskBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="http://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></a></p>
+<dl class="method">
+<dt id="sailing_robot.taskbase.TaskBase.debug_pub">
+<tt class="descname">debug_pub</tt><big>(</big><em>topic</em>, <em>value</em><big>)</big><a class="reference internal" href="_modules/sailing_robot/taskbase.html#TaskBase.debug_pub"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.taskbase.TaskBase.debug_pub" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sailing_robot.taskbase.TaskBase.debug_topics">
+<tt class="descname">debug_topics</tt><em class="property"> = []</em><a class="headerlink" href="#sailing_robot.taskbase.TaskBase.debug_topics" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="sailing_robot.taskbase.TaskBase.init_ros">
+<tt class="descname">init_ros</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sailing_robot/taskbase.html#TaskBase.init_ros"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.taskbase.TaskBase.init_ros" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="sailing_robot.taskbase.TaskBase.log">
+<tt class="descname">log</tt><big>(</big><em>level</em>, <em>msg</em>, <em>*values</em><big>)</big><a class="reference internal" href="_modules/sailing_robot/taskbase.html#TaskBase.log"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.taskbase.TaskBase.log" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-sailing_robot.tasks">
+<span id="sailing-robot-tasks-module"></span><h2>sailing_robot.tasks module<a class="headerlink" href="#module-sailing_robot.tasks" title="Permalink to this headline">¶</a></h2>
+<p>Machinery to step through tasks.</p>
+<p>This can be tested without ROS; tasks_ros.py contains a subclass which
+integrates with ROS to publish logging and debugging topics.</p>
+<dl class="class">
+<dt id="sailing_robot.tasks.TasksRunner">
+<em class="property">class </em><tt class="descclassname">sailing_robot.tasks.</tt><tt class="descname">TasksRunner</tt><big>(</big><em>tasks</em>, <em>nav</em><big>)</big><a class="reference internal" href="_modules/sailing_robot/tasks.html#TasksRunner"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.tasks.TasksRunner" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="http://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></a></p>
+<dl class="method">
+<dt id="sailing_robot.tasks.TasksRunner.calculate_state_and_goal">
+<tt class="descname">calculate_state_and_goal</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sailing_robot/tasks.html#TasksRunner.calculate_state_and_goal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.tasks.TasksRunner.calculate_state_and_goal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use the active task to calculate what to do now.</p>
+<p>Before using the active task, checks if it should go to the next task.</p>
+<p>If a safety zone is specified, also checks if we&#8217;re (nearly) out of it.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sailing_robot.tasks.TasksRunner.check_jump_labels">
+<tt class="descname">check_jump_labels</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sailing_robot/tasks.html#TasksRunner.check_jump_labels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.tasks.TasksRunner.check_jump_labels" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="sailing_robot.tasks.TasksRunner.debug_pub">
+<tt class="descname">debug_pub</tt><big>(</big><em>topic</em>, <em>value</em><big>)</big><a class="reference internal" href="_modules/sailing_robot/tasks.html#TasksRunner.debug_pub"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.tasks.TasksRunner.debug_pub" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="sailing_robot.tasks.TasksRunner.insert_task">
+<tt class="descname">insert_task</tt><big>(</big><em>taskdict</em><big>)</big><a class="reference internal" href="_modules/sailing_robot/tasks.html#TasksRunner.insert_task"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.tasks.TasksRunner.insert_task" title="Permalink to this definition">¶</a></dt>
+<dd><p>Do a temporary task.</p>
+<p>After completing the temporary task, control will be return to the
+regular task that was active before the temporary task was started.</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="sailing_robot.tasks.TasksRunner.log">
+<em class="property">static </em><tt class="descname">log</tt><big>(</big><em>level</em>, <em>msg</em>, <em>*values</em><big>)</big><a class="reference internal" href="_modules/sailing_robot/tasks.html#TasksRunner.log"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.tasks.TasksRunner.log" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sailing_robot.tasks.TasksRunner.on_temporary_task">
+<tt class="descname">on_temporary_task</tt><em class="property"> = False</em><a class="headerlink" href="#sailing_robot.tasks.TasksRunner.on_temporary_task" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="sailing_robot.tasks.TasksRunner.process_jump">
+<tt class="descname">process_jump</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sailing_robot/tasks.html#TasksRunner.process_jump"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.tasks.TasksRunner.process_jump" title="Permalink to this definition">¶</a></dt>
+<dd><p>If a jump is set, go to that task, and clear the jump.</p>
+<p>Returns True if a jump occurred.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sailing_robot.tasks.TasksRunner.set_jump">
+<tt class="descname">set_jump</tt><big>(</big><em>label</em><big>)</big><a class="reference internal" href="_modules/sailing_robot/tasks.html#TasksRunner.set_jump"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.tasks.TasksRunner.set_jump" title="Permalink to this definition">¶</a></dt>
+<dd><p>Jump callback to jump to task on next time step.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sailing_robot.tasks.TasksRunner.start_next_task">
+<tt class="descname">start_next_task</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sailing_robot/tasks.html#TasksRunner.start_next_task"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.tasks.TasksRunner.start_next_task" title="Permalink to this definition">¶</a></dt>
+<dd><p>Step to the next task, making it the active task.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sailing_robot.tasks.TimedEnd">
+<em class="property">class </em><tt class="descclassname">sailing_robot.tasks.</tt><tt class="descname">TimedEnd</tt><big>(</big><em>seconds</em><big>)</big><a class="reference internal" href="_modules/sailing_robot/tasks.html#TimedEnd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.tasks.TimedEnd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="http://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></a></p>
+<dl class="method">
+<dt id="sailing_robot.tasks.TimedEnd.check">
+<tt class="descname">check</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sailing_robot/tasks.html#TimedEnd.check"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.tasks.TimedEnd.check" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="sailing_robot.tasks.TimedEnd.start">
+<tt class="descname">start</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sailing_robot/tasks.html#TimedEnd.start"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.tasks.TimedEnd.start" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="sailing_robot.tasks.tasks_from_wps">
+<tt class="descclassname">sailing_robot.tasks.</tt><tt class="descname">tasks_from_wps</tt><big>(</big><em>wp_params</em><big>)</big><a class="reference internal" href="_modules/sailing_robot/tasks.html#tasks_from_wps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.tasks.tasks_from_wps" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-sailing_robot.tasks_ros">
+<span id="sailing-robot-tasks-ros-module"></span><h2>sailing_robot.tasks_ros module<a class="headerlink" href="#module-sailing_robot.tasks_ros" title="Permalink to this headline">¶</a></h2>
+<p>Tasks with ROS debugging machinery.</p>
+<p>This is separate from the base task running machinery so that that can be tested
+without ROS being involved.</p>
+<dl class="class">
+<dt id="sailing_robot.tasks_ros.RosTasksRunner">
+<em class="property">class </em><tt class="descclassname">sailing_robot.tasks_ros.</tt><tt class="descname">RosTasksRunner</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/sailing_robot/tasks_ros.html#RosTasksRunner"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.tasks_ros.RosTasksRunner" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#sailing_robot.tasks.TasksRunner" title="sailing_robot.tasks.TasksRunner"><tt class="xref py py-class docutils literal"><span class="pre">sailing_robot.tasks.TasksRunner</span></tt></a></p>
+<dl class="method">
+<dt id="sailing_robot.tasks_ros.RosTasksRunner.debug_pub">
+<tt class="descname">debug_pub</tt><big>(</big><em>topic</em>, <em>value</em><big>)</big><a class="reference internal" href="_modules/sailing_robot/tasks_ros.html#RosTasksRunner.debug_pub"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.tasks_ros.RosTasksRunner.debug_pub" title="Permalink to this definition">¶</a></dt>
+<dd><p>Publish a value for a debugging topic.</p>
+<p><em>topic</em> should be the name of a topic previously set up by
+register_debug_topics()</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="sailing_robot.tasks_ros.RosTasksRunner.log">
+<em class="property">static </em><tt class="descname">log</tt><big>(</big><em>level</em>, <em>msg</em>, <em>*values</em><big>)</big><a class="reference internal" href="_modules/sailing_robot/tasks_ros.html#RosTasksRunner.log"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.tasks_ros.RosTasksRunner.log" title="Permalink to this definition">¶</a></dt>
+<dd><p>Log output through ROS.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sailing_robot.tasks_ros.RosTasksRunner.register_debug_topics">
+<tt class="descname">register_debug_topics</tt><big>(</big><em>topics</em><big>)</big><a class="reference internal" href="_modules/sailing_robot/tasks_ros.html#RosTasksRunner.register_debug_topics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sailing_robot.tasks_ros.RosTasksRunner.register_debug_topics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets up publishers for a task&#8217;s debugging topics.</p>
+<p><em>topics</em> should be a list of pairs, (topic_name, data_type), e.g.:</p>
+<blockquote>
+<div>[(&#8216;next_wp&#8217;, &#8216;sensor_msgs.msg:NavSatFix&#8217;)]</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-sailing_robot">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-sailing_robot" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">sailing_robot package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-sailing_robot.heading_planning">sailing_robot.heading_planning module</a></li>
+<li><a class="reference internal" href="#module-sailing_robot.heading_planning_dumb">sailing_robot.heading_planning_dumb module</a></li>
+<li><a class="reference internal" href="#module-sailing_robot.navigation">sailing_robot.navigation module</a></li>
+<li><a class="reference internal" href="#module-sailing_robot.pid_control">sailing_robot.pid_control module</a></li>
+<li><a class="reference internal" href="#module-sailing_robot.pid_data">sailing_robot.pid_data module</a></li>
+<li><a class="reference internal" href="#module-sailing_robot.sail_data">sailing_robot.sail_data module</a></li>
+<li><a class="reference internal" href="#module-sailing_robot.station_keeping">sailing_robot.station_keeping module</a></li>
+<li><a class="reference internal" href="#module-sailing_robot.tack_control">sailing_robot.tack_control module</a></li>
+<li><a class="reference internal" href="#module-sailing_robot.taskbase">sailing_robot.taskbase module</a></li>
+<li><a class="reference internal" href="#module-sailing_robot.tasks">sailing_robot.tasks module</a></li>
+<li><a class="reference internal" href="#module-sailing_robot.tasks_ros">sailing_robot.tasks_ros module</a></li>
+<li><a class="reference internal" href="#module-sailing_robot">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/sailing_robot.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">Soton Pirate RoBoat 0.0.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2016, Soton Pirates.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>
